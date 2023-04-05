@@ -1,8 +1,9 @@
 use clap::Parser;
 use std::{
-    fs::{self},
-    path::{PathBuf},
+    path::{PathBuf}, sync::Arc, borrow::Borrow,
 };
+use swc_common;
+use swc_xml;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -12,9 +13,25 @@ struct Args {
     files: Vec<PathBuf>,
 }
 
-fn execute(file_path: PathBuf) {
-    let contents = fs::read_to_string(file_path).expect(&format!("Failed to open file"));
-    println!("With text:\n{}", contents);
+fn execute(input: PathBuf) {
+    let cm = Arc::<swc_common::SourceMap>::default();
+
+    let fm = cm
+        .load_file(input.borrow())
+        .expect(&format!("{} does not exist", input.display()));
+
+    let mut errors = vec![];
+    let document = swc_xml::parser::parse_file_as_document(
+        fm.borrow(),
+        swc_xml::parser::parser::ParserConfig{
+            ..Default::default()
+        },
+        &mut errors
+    ).unwrap();
+
+    // for err in &errors {
+    //     err.to_diagnostics(&handler).emit();
+    // }
 }
 
 fn main() {
@@ -22,5 +39,5 @@ fn main() {
 
     args.files
         .into_iter()
-        .for_each(|file_path| execute(file_path));
+        .for_each(|input| execute(input));
 }
