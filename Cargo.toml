@@ -7,4 +7,7 @@ edition = "2021"
 clap = { version = "4.2.0", features = ["derive"] }
 swc = "0.259.2"
 swc_common = "0.30.5"
+swc_core = "0.74.2"
+swc_ecma_codegen = "0.137.6"
+swc_ecmascript = "0.226.2"
 swc_xml = "0.10.3"
