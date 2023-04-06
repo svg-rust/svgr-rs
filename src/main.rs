@@ -56,9 +56,30 @@ fn execute(input: PathBuf) {
         asserts: None,
     })));
 
-    document.visit_with(&mut visitor::SvgToReactAst {
-        body: &mut body,
-    });
+    let mut visitor = visitor::SvgToReactAst::new();
+    document.visit_with(&mut visitor);
+
+    if let Some(expr) = visitor.get_jsx() {
+        body.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
+            span: DUMMY_SP,
+            kind: VarDeclKind::Const,
+            declare: false,
+            decls: vec![VarDeclarator {
+                span: DUMMY_SP,
+                name: Pat::Ident(BindingIdent::from(Ident::new("SVG".into(), DUMMY_SP))),
+                definite: false,
+                init: Some(Box::new(Expr::Arrow(ArrowExpr {
+                    span: DUMMY_SP,
+                    params: vec![Pat::Ident(BindingIdent::from(Ident::new("props".into(), DUMMY_SP)))],
+                    body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::JSXElement(Box::new(expr))))),
+                    is_async: false,
+                    is_generator: false,
+                    type_params: None,
+                    return_type: None,
+                }))),
+            }],
+        })))));
+    }
 
     body.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
         span: DUMMY_SP,
