@@ -3,9 +3,11 @@ use std::{
     path::{PathBuf}, sync::Arc, borrow::Borrow,
 };
 use swc_common::{SourceMap, DUMMY_SP};
-use swc_ecmascript::ast::{ExprStmt, Expr, Ident, Module, ModuleItem, Stmt, JSXElement, JSXOpeningElement, JSXElementName};
+use swc_ecmascript::ast::*;
 use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 use swc_xml::{self, visit::VisitWith};
+
+mod visitor;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -33,41 +35,35 @@ fn execute(input: PathBuf) {
 
     let mut body = vec![];
 
-    struct SvgRVisitor<'a> {
-        body: &'a mut Vec<ModuleItem>,
-    }
-
-    impl swc_xml::visit::Visit for SvgRVisitor<'_> {
-        fn visit_element(&mut self, n: &swc_xml::ast::Element) {
-            println!("{:?}",  n.tag_name);
-
-            let opening = JSXOpeningElement {
+    body.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+        span: DUMMY_SP,
+        specifiers: vec![
+            ImportSpecifier::Namespace(ImportStarAsSpecifier {
                 span: DUMMY_SP,
-                name: JSXElementName::Ident(Ident::new("a".into(), DUMMY_SP)),
-                attrs: vec![],
-                self_closing: true,
-                type_args: None,
-            };
+                local: Ident {
+                    span: DUMMY_SP,
+                    sym: "React".into(),
+                    optional: false,
+                },
+            }),
+        ],
+        src: Box::new(Str {
+            span: DUMMY_SP,
+            value: "react".into(),
+            raw: None,
+        }),
+        type_only: false,
+        asserts: None,
+    })));
 
-            let element = JSXElement {
-                span: DUMMY_SP,
-                opening,
-                children: vec![],
-                closing: None,
-            };
-
-            let stmt = ExprStmt {
-                span: DUMMY_SP,
-                expr: Box::new(Expr::JSXElement(Box::new(element)))
-            };
-
-            self.body.push(ModuleItem::Stmt(Stmt::Expr(stmt)));
-        }
-    }
-
-    document.visit_with(&mut SvgRVisitor {
+    document.visit_with(&mut visitor::SvgToReactAst {
         body: &mut body,
     });
+
+    body.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
+        span: DUMMY_SP,
+        expr: Box::new(Expr::Ident(Ident::new("SVG".into(), DUMMY_SP))),
+    })));
 
     let m = Module {
         span: DUMMY_SP,
