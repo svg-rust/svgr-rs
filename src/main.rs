@@ -4,6 +4,7 @@ use std::{
 };
 use swc_common::{SourceMap, DUMMY_SP};
 use swc_ecmascript::ast::{ExprStmt, Expr, Ident, Module, ModuleItem, Stmt, JSXElement, JSXOpeningElement, JSXElementName};
+use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
 use swc_xml::{self, visit::VisitWith};
 
 #[derive(Parser, Debug)]
@@ -44,7 +45,7 @@ fn execute(input: PathBuf) {
                 span: DUMMY_SP,
                 name: JSXElementName::Ident(Ident::new("a".into(), DUMMY_SP)),
                 attrs: vec![],
-                self_closing: false,
+                self_closing: true,
                 type_args: None,
             };
 
@@ -68,11 +69,32 @@ fn execute(input: PathBuf) {
         body: &mut body,
     });
 
-    let module = Module {
+    let m = Module {
         span: DUMMY_SP,
         body,
         shebang: None,
     };
+
+    let code = {
+        let mut buf = vec![];
+
+        {
+            let mut emitter = Emitter {
+                cfg: swc_ecma_codegen::Config {
+                    ..Default::default()
+                },
+                cm: cm.clone(),
+                comments: None,
+                wr: JsWriter::new(cm, "\n", &mut buf, None),
+            };
+
+            emitter.emit_module(&m).unwrap();
+        }
+
+        String::from_utf8_lossy(&buf).to_string()
+    };
+
+    println!("{}", code);
 }
 
 fn main() {
