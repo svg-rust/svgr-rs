@@ -1,13 +1,10 @@
 use clap::Parser;
-use std::{
-    path::{PathBuf}, sync::Arc, borrow::Borrow,
-};
+use std::{path::{PathBuf}, sync::Arc, borrow::Borrow};
 use swc_common::{SourceMap, DUMMY_SP};
-use swc_ecmascript::ast::*;
-use swc_ecma_codegen::{text_writer::JsWriter, Emitter};
-use swc_xml::{self, visit::VisitWith};
+use swc_ecmascript::{ast::*, codegen::{text_writer::JsWriter, Emitter, Config}};
+use swc_xml::{parser::{parse_file_as_document, parser}};
 
-mod visitor;
+mod hast_to_swc_ast;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -25,9 +22,9 @@ fn execute(input: PathBuf) {
         .expect(&format!("{} does not exist", input.display()));
 
     let mut errors = vec![];
-    let document = swc_xml::parser::parse_file_as_document(
+    let document = parse_file_as_document(
         fm.borrow(),
-        swc_xml::parser::parser::ParserConfig{
+        parser::ParserConfig{
             ..Default::default()
         },
         &mut errors
@@ -56,10 +53,7 @@ fn execute(input: PathBuf) {
         asserts: None,
     })));
 
-    let mut visitor = visitor::SvgToReactAst::new();
-    document.visit_with(&mut visitor);
-
-    if let Some(expr) = visitor.get_jsx() {
+    if let Some(expr) = hast_to_swc_ast::to_swc_ast(document) {
         body.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
             span: DUMMY_SP,
             kind: VarDeclKind::Const,
@@ -97,7 +91,7 @@ fn execute(input: PathBuf) {
 
         {
             let mut emitter = Emitter {
-                cfg: swc_ecma_codegen::Config {
+                cfg: Config {
                     ..Default::default()
                 },
                 cm: cm.clone(),
