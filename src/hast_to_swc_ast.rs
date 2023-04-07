@@ -4,6 +4,8 @@ use swc_ecmascript::ast::*;
 use swc_xml::{visit::{Visit, VisitWith}};
 use regex::{Regex, Captures};
 
+mod string_to_object_style;
+
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
     kebab_regex.replace_all(str, |caps: &Captures| format!("-{}", &caps[0].to_lowercase())).into()
@@ -71,47 +73,9 @@ fn get_key(attr_name: &str, tag_name: &str) -> Ident {
     }
 }
 
-
-pub fn string_to_object_style(raw_style: &str) -> Expr {
-    let entries = raw_style.split(';');
-
-    let properties = entries.into_iter()
-        .map(|entry| {
-            let style = entry.trim();
-            if style.len() == 0 {
-                return None;
-            }
-
-            let first_colon = style.find(':');
-            match first_colon {
-                Some(i) =>  {
-                    let value = style[(i + 1)..].trim();
-                    let key = style[..i].trim();
-                    Some(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
-                        key: PropName::Ident(Ident::new(key.into(), DUMMY_SP)),
-                        value: Box::new(Expr::Lit(Lit::Str(Str {
-                            span: DUMMY_SP,
-                            value: value.into(),
-                            raw: None,
-                        }))),
-                    }))))
-                },
-                None => None,
-            }
-        })
-        .filter(|p| p.is_some())
-        .map(|p| p.unwrap())
-        .collect::<Vec<PropOrSpread>>();
-
-    Expr::Object(ObjectLit {
-        span: DUMMY_SP,
-        props: properties,
-    })
-}
-
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
     if attr_name == "style" {
-        let style = string_to_object_style(value);
+        let style = string_to_object_style::string_to_object_style(value);
 
         return JSXAttrValue::JSXExprContainer(JSXExprContainer {
             span: DUMMY_SP,
@@ -164,19 +128,31 @@ fn element(n: &swc_xml::ast::Element) -> JSXElement {
         }
     ).collect::<Vec<JSXAttrOrSpread>>();
 
+    let name = JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP));
+    let children = all(&n.children);
+
     let opening = JSXOpeningElement {
         span: DUMMY_SP,
-        name: JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP)),
+        name: name.clone(),
         attrs,
-        self_closing: true,
+        self_closing: children.len() == 0,
         type_args: None,
+    };
+
+    let closing = if children.len() > 0 {
+        Some(JSXClosingElement {
+            span: DUMMY_SP,
+            name,
+        })
+    } else {
+        None
     };
 
     JSXElement {
         span: DUMMY_SP,
         opening,
-        children: all(&n.children),
-        closing: None,
+        children,
+        closing,
     }
 }
 
@@ -235,6 +211,7 @@ mod tests {
                     {
                         let mut emitter = Emitter {
                             cfg: Config {
+                                minify: true,
                                 ..Default::default()
                             },
                             cm: cm.clone(),
@@ -268,8 +245,8 @@ mod tests {
 
     #[test]
     fn transforms_style() {
-        let svg = r#"<svg><path style="--index: 1; font-size: 24px;"><g></g></path><path style="--index: 2"></path></svg>"#;
+        let svg = r#"<svg><path style="--index: 1; font-size: 24px;"></path><path style="--index: 2"></path></svg>"#;
         let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg aria-hidden="true"/>;"#)
+        assert_eq!(jsx, r#"<svg><path style={{"--index":1,fontSize:24}}/><path style={{"--index":2}}/></svg>;"#)
     }
 }
