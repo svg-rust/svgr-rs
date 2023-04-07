@@ -5,6 +5,7 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "4.2.0", features = ["derive"] }
+regex = "1.7.3"
 swc = "0.259.2"
 swc_common = "0.30.5"
 swc_core = { version = "0.74.2", features = ["testing"] }

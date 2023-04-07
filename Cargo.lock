@@ -1722,6 +1722,7 @@ name = "svgr-rs"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "regex",
  "swc",
  "swc_common",
  "swc_core",
