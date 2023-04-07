@@ -71,12 +71,113 @@ fn get_key(attr_name: &str, tag_name: &str) -> Ident {
     }
 }
 
+
+pub fn string_to_object_style(raw_style: &str) -> Expr {
+    let entries = raw_style.split(';');
+
+    let properties = entries.into_iter()
+        .map(|entry| {
+            let style = entry.trim();
+            if style.len() == 0 {
+                return None;
+            }
+
+            let first_colon = style.find(':');
+            match first_colon {
+                Some(i) =>  {
+                    let value = style[(i + 1)..].trim();
+                    let key = style[..i].trim();
+                    Some(PropOrSpread::Prop(Box::new(Prop::KeyValue(KeyValueProp {
+                        key: PropName::Ident(Ident::new(key.into(), DUMMY_SP)),
+                        value: Box::new(Expr::Lit(Lit::Str(Str {
+                            span: DUMMY_SP,
+                            value: value.into(),
+                            raw: None,
+                        }))),
+                    }))))
+                },
+                None => None,
+            }
+        })
+        .filter(|p| p.is_some())
+        .map(|p| p.unwrap())
+        .collect::<Vec<PropOrSpread>>();
+
+    Expr::Object(ObjectLit {
+        span: DUMMY_SP,
+        props: properties,
+    })
+}
+
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
+    if attr_name == "style" {
+        let style = string_to_object_style(value);
+
+        return JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            span: DUMMY_SP,
+            expr: JSXExpr::Expr(Box::new(style)),
+        })
+    }
+
     return JSXAttrValue::Lit(Lit::Str(Str {
         span: DUMMY_SP,
         value: value.clone(),
         raw: None
     }))
+}
+
+fn all(children: &Vec<swc_xml::ast::Child>) -> Vec<JSXElementChild> {
+    children.into_iter()
+        .map(|n| {
+            match n {
+                swc_xml::ast::Child::Element(e) => Some(JSXElementChild::JSXElement(Box::new(element(&e)))),
+                swc_xml::ast::Child::Text(t) => Some(JSXElementChild::JSXText(text(&t))),
+                _ => None,
+            }
+        })
+        .filter(|n| n.is_some())
+        .map(|n| n.unwrap())
+        .collect()
+}
+
+fn comment(n: &swc_xml::ast::Comment) -> JSXText {
+    todo!()
+}
+
+fn text(n: &swc_xml::ast::Text) -> JSXText {
+    todo!()
+}
+
+fn element(n: &swc_xml::ast::Element) -> JSXElement {
+    let attrs = n.attributes.iter().map(
+        |attr| {
+            let value = match attr.value.clone() {
+                Some(v) => Some(get_value(&attr.name, &v)),
+                None => None,
+            };
+
+            JSXAttrOrSpread::JSXAttr(JSXAttr {
+                span: DUMMY_SP,
+                name: JSXAttrName::Ident(get_key(&attr.name, &n.tag_name)),
+                value,
+            })
+        }
+    ).collect::<Vec<JSXAttrOrSpread>>();
+
+    let opening = JSXOpeningElement {
+        span: DUMMY_SP,
+        name: JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP)),
+        attrs,
+        self_closing: true,
+        type_args: None,
+    };
+
+    JSXElement {
+        span: DUMMY_SP,
+        opening,
+        children: all(&n.children),
+        closing: None,
+    }
 }
 
 pub struct HastVisitor {
@@ -91,37 +192,7 @@ impl HastVisitor {
 
 impl Visit for HastVisitor {
     fn visit_element(&mut self, n: &swc_xml::ast::Element) {
-        let attrs = n.attributes.iter().map(
-            |attr| {
-                let value = match attr.value.clone() {
-                    Some(v) => Some(get_value(&attr.name, &v)),
-                    None => None,
-                };
-
-                JSXAttrOrSpread::JSXAttr(JSXAttr {
-                    span: DUMMY_SP,
-                    name: JSXAttrName::Ident(get_key(&attr.name, &n.tag_name)),
-                    value,
-                })
-            }
-        ).collect::<Vec<JSXAttrOrSpread>>();
-
-        let opening = JSXOpeningElement {
-            span: DUMMY_SP,
-            name: JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP)),
-            attrs,
-            self_closing: true,
-            type_args: None,
-        };
-
-        let e = JSXElement {
-            span: DUMMY_SP,
-            opening,
-            children: vec![],
-            closing: None,
-        };
-
-        self.jsx = Some(e);
+        self.jsx = Some(element(n));
     }
 }
 
@@ -150,7 +221,7 @@ mod tests {
         let mut errors = vec![];
         let document = parse_file_as_document(
             fm.borrow(),
-            parser::ParserConfig{
+            parser::ParserConfig {
                 ..Default::default()
             },
             &mut errors
@@ -168,7 +239,7 @@ mod tests {
                             },
                             cm: cm.clone(),
                             comments: None,
-                            wr: JsWriter::new(cm, "\n", &mut buf, None),
+                            wr: JsWriter::new(cm, "", &mut buf, None),
                         };
             
                         emitter.emit_module_item(&ModuleItem::Stmt(
@@ -190,8 +261,15 @@ mod tests {
 
     #[test]
     fn transforms_aria_x() {
-        let code = "<svg aria-hidden=\"true\"></svg>";
-        let result = transform(code);
-        assert_eq!(result, "<svg aria-hidden=\"true\"/>;\n")
+        let svg = r#"<svg aria-hidden="true"></svg>"#;
+        let jsx = transform(svg);
+        assert_eq!(jsx, r#"<svg aria-hidden="true"/>;"#)
+    }
+
+    #[test]
+    fn transforms_style() {
+        let svg = r#"<svg><path style="--index: 1; font-size: 24px;"><g></g></path><path style="--index: 2"></path></svg>"#;
+        let jsx = transform(svg);
+        assert_eq!(jsx, r#"<svg aria-hidden="true"/>;"#)
     }
 }
