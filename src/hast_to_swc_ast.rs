@@ -6,10 +6,15 @@ use swc_ecmascript::ast::*;
 use swc_xml::{visit::{Visit, VisitWith}};
 use regex::{Regex, Captures};
 
-use super::decode_xml::*;
-use super::string_to_object_style::*;
-use super::mappings::*;
-use super::util::*;
+mod decode_xml;
+mod string_to_object_style;
+mod mappings;
+mod util;
+
+use self::decode_xml::*;
+use self::string_to_object_style::*;
+use self::mappings::*;
+use self::util::*;
 
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
