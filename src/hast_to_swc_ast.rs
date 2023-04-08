@@ -117,10 +117,13 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
         return None;
     }
 
-    Some(JSXElementChild::JSXText(JSXText {
+    Some(JSXElementChild::JSXExprContainer(JSXExprContainer {
         span: DUMMY_SP,
-        value: decode_xml::decode_xml(value.as_str()).into(),
-        raw: value.clone().into(),
+        expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Str(Str {
+            span: DUMMY_SP,
+            value: decode_xml::decode_xml(value.as_str()).into(),
+            raw: None,
+        })))),
     }))
 }
 
