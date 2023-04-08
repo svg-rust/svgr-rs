@@ -9,6 +9,7 @@ use regex::{Regex, Captures};
 use super::decode_xml::*;
 use super::string_to_object_style::*;
 use super::mappings::*;
+use super::util::*;
 
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
@@ -29,6 +30,17 @@ fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
         return JSXAttrValue::JSXExprContainer(JSXExprContainer {
             span: DUMMY_SP,
             expr: JSXExpr::Expr(Box::new(style)),
+        })
+    }
+
+    if is_numeric(value) {
+        return JSXAttrValue::JSXExprContainer(JSXExprContainer {
+            span: DUMMY_SP,
+            expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Num(Number {
+                span: DUMMY_SP,
+                value: value.parse().unwrap(),
+                raw: None,
+            })))),
         })
     }
 
@@ -291,7 +303,7 @@ mod tests {
         assert_eq!(res, expected)
     }
 
-    #[testing::fixture("fixture/**/*.svg")]
+    #[testing::fixture("fixture/*/*.svg")]
     fn pass(input: PathBuf) {
         document_test(input);
     }

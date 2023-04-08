@@ -2,6 +2,8 @@ use swc_common::DUMMY_SP;
 use swc_ecmascript::ast::*;
 use regex::{Regex, Captures};
 
+use super::util::*;
+
 const PX_REGEX: &str = r#"^\d+px$"#;
 const MS_REGEX: &str = r#"^-ms-"#;
 const VAR_REGEX: &str = r#"^--"#;
@@ -29,11 +31,6 @@ pub fn format_key(key: &str) -> PropName {
     }
 
     PropName::Ident(Ident::new(hyphen_to_camel_case(&key).into(), DUMMY_SP))
-}
-
-fn is_numeric(s: &str) -> bool {
-    let regex = Regex::new(r#"^\d+$"#).unwrap();
-    regex.is_match(s)
 }
 
 fn is_convertible_pixel_value(s: &str) -> bool {
