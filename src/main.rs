@@ -4,6 +4,8 @@ use swc_common::{SourceMap, DUMMY_SP};
 use swc_ecmascript::{ast::*, codegen::{text_writer::JsWriter, Emitter, Config}};
 use swc_xml::{parser::{parse_file_as_document, parser}};
 
+mod decode_xml;
+mod string_to_object_style;
 mod hast_to_swc_ast;
 
 #[derive(Parser, Debug)]

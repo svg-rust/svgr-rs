@@ -4,8 +4,8 @@ use swc_ecmascript::ast::*;
 use swc_xml::{visit::{Visit, VisitWith}};
 use regex::{Regex, Captures};
 
-mod string_to_object_style;
-mod decode_xml;
+use super::decode_xml::*;
+use super::string_to_object_style::*;
 
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
@@ -76,7 +76,7 @@ fn get_key(attr_name: &str, tag_name: &str) -> Ident {
 
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
     if attr_name == "style" {
-        let style = string_to_object_style::string_to_object_style(value);
+        let style = string_to_object_style(value);
 
         return JSXAttrValue::JSXExprContainer(JSXExprContainer {
             span: DUMMY_SP,
@@ -121,7 +121,7 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
         span: DUMMY_SP,
         expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Str(Str {
             span: DUMMY_SP,
-            value: decode_xml::decode_xml(value.as_str()).into(),
+            value: decode_xml(value.as_str()).into(),
             raw: None,
         })))),
     }))
@@ -277,6 +277,13 @@ mod tests {
         let svg = r#"<svg><text>&lt;</text></svg>"#;
         let jsx = transform(svg);
         assert_eq!(jsx, r#"<svg><text>{"<"}</text></svg>;"#)
+    }
+
+    #[test]
+    fn string_literals_children_of_tspan_nodes_should_have_decoded_xml_entities() {
+        let svg = r#"<svg><text><tspan>&lt;</tspan></text></svg>"#;
+        let jsx = transform(svg);
+        assert_eq!(jsx, r#"<svg><text><tspan>{"<"}</tspan></text></svg>;"#)
     }
 
     #[test]
