@@ -13,7 +13,7 @@ use super::util::*;
 
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
-    kebab_regex.replace_all(str, |caps: &Captures| format!("-{}", &caps[0].to_lowercase())).into()
+    kebab_regex.replace_all(str, |caps: &Captures| format!("-{}", &caps[0].to_lowercase())).to_string()
 }
 
 fn convert_aria_attribute(kebab_key: &str) -> String {
@@ -21,6 +21,11 @@ fn convert_aria_attribute(kebab_key: &str) -> String {
     let aria = parts[0];
     let lowercase_parts: String = parts[1..].join("").to_lowercase();
     format!("{}-{}", aria, lowercase_parts)
+}
+
+fn replace_spaces(s: &str) -> String {
+    let spaces_regex = Regex::new(r"[\t\r\n\u0085\u2028\u2029]+").unwrap();
+    spaces_regex.replace_all(s, |_: &Captures| " ").to_string()
 }
 
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
@@ -46,7 +51,7 @@ fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
 
     return JSXAttrValue::Lit(Lit::Str(Str {
         span: DUMMY_SP,
-        value: value.clone(),
+        value: replace_spaces(value).into(),
         raw: None
     }))
 }
