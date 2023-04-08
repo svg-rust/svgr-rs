@@ -1728,6 +1728,7 @@ dependencies = [
  "swc_core",
  "swc_ecmascript",
  "swc_xml",
+ "testing",
 ]
 
 [[package]]

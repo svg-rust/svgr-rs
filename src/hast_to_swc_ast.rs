@@ -197,20 +197,17 @@ pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::Arc, borrow::Borrow};
-    use swc_common::{SourceMap, FileName};
+    use std::{sync::Arc, borrow::Borrow, path::PathBuf};
+    use swc_common::{SourceMap, SourceFile, FileName};
     use swc_ecmascript::{codegen::{text_writer::JsWriter, Emitter, Config}};
     use swc_xml::parser::{parse_file_as_document, parser};
+    use testing::NormalizedOutput;
 
     use super::*;
 
-    fn transform(code: &str) -> String {
-        let cm = Arc::<SourceMap>::default();
-
-        let fm = cm.new_source_file(FileName::Anon, code.to_string());
-
+    fn transform(cm: Arc::<SourceMap>, fm: Arc<SourceFile>, minify: bool) -> String {
         let mut errors = vec![];
-        let document = parse_file_as_document(
+        let xml_doc = parse_file_as_document(
             fm.borrow(),
             parser::ParserConfig {
                 ..Default::default()
@@ -218,29 +215,34 @@ mod tests {
             &mut errors
         ).unwrap();
 
-        match to_swc_ast(document) {
+        match to_swc_ast(xml_doc) {
             Some(jsx) => {
                 let code = {
                     let mut buf = vec![];
             
-                    {
-                        let mut emitter = Emitter {
-                            cfg: Config {
-                                minify: true,
-                                ..Default::default()
-                            },
-                            cm: cm.clone(),
-                            comments: None,
-                            wr: JsWriter::new(cm, "", &mut buf, None),
-                        };
-            
-                        emitter.emit_module_item(&ModuleItem::Stmt(
-                            Stmt::Expr(ExprStmt {
-                                span: DUMMY_SP,
-                                expr: Box::new(Expr::JSXElement(Box::new(jsx))),
-                            })
-                        )).unwrap();
-                    }
+                    let new_line = {
+                        if minify {
+                            ""
+                        } else {
+                            "\n"
+                        }
+                    };
+                    let mut emitter = Emitter {
+                        cfg: Config {
+                            minify,
+                            ..Default::default()
+                        },
+                        cm: cm.clone(),
+                        comments: None,
+                        wr: JsWriter::new(cm, new_line, &mut buf, None),
+                    };
+        
+                    emitter.emit_module_item(&ModuleItem::Stmt(
+                        Stmt::Expr(ExprStmt {
+                            span: DUMMY_SP,
+                            expr: Box::new(Expr::JSXElement(Box::new(jsx))),
+                        })
+                    )).unwrap();
             
                     String::from_utf8_lossy(&buf).to_string()
                 };
@@ -251,45 +253,68 @@ mod tests {
         }
     }
 
-    #[test]
-    fn transforms_aria_x() {
-        let svg = r#"<svg aria-hidden="true"></svg>"#;
-        let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg aria-hidden="true"/>;"#)
+    fn document_test(input: PathBuf) {
+        let jsx_path = input.parent().unwrap().join("output.jsx");
+
+        let cm = Arc::<SourceMap>::default();
+        let fm = cm.load_file(&input).expect("failed to load fixture file");
+
+        let res = transform(cm, fm, false);
+
+        NormalizedOutput::from(res).compare_to_file(&jsx_path).unwrap();
+    }
+
+    fn code_test(input: &str, expected: &str) {
+        let cm = Arc::<SourceMap>::default();
+        let fm = cm.new_source_file(FileName::Anon, input.to_string());
+
+        let res = transform(cm, fm, true);
+
+        assert_eq!(res, expected)
+    }
+
+    #[testing::fixture("fixture/**/*.svg")]
+    fn pass(input: PathBuf) {
+        document_test(input);
     }
 
     #[test]
     fn transforms_data_x() {
-        let svg = r#"<svg data-hidden="true"></svg>"#;
-        let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg data-hidden="true"/>;"#)
+        code_test(
+            r#"<svg data-hidden="true"></svg>"#,
+            r#"<svg data-hidden="true"/>;"#,
+        );
     }
 
     #[test]
     fn preserves_mask_type() {
-        let svg = r#"<svg><mask mask-type="alpha"/></svg>"#;
-        let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg><mask mask-type="alpha"/></svg>;"#)
+        code_test(
+            r#"<svg><mask mask-type="alpha"/></svg>"#,
+            r#"<svg><mask mask-type="alpha"/></svg>;"#,
+        );
     }
 
     #[test]
     fn string_literals_children_of_text_nodes_should_have_decoded_xml_entities() {
-        let svg = r#"<svg><text>&lt;</text></svg>"#;
-        let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg><text>{"<"}</text></svg>;"#)
+        code_test(
+            r#"<svg><text>&lt;</text></svg>"#,
+            r#"<svg><text>{"<"}</text></svg>;"#,
+        );
     }
 
     #[test]
     fn string_literals_children_of_tspan_nodes_should_have_decoded_xml_entities() {
-        let svg = r#"<svg><text><tspan>&lt;</tspan></text></svg>"#;
-        let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg><text><tspan>{"<"}</tspan></text></svg>;"#)
+        code_test(
+            r#"<svg><text><tspan>&lt;</tspan></text></svg>"#,
+            r#"<svg><text><tspan>{"<"}</tspan></text></svg>;"#,
+        );
     }
 
     #[test]
     fn transforms_style() {
-        let svg = r#"<svg><path style="--index: 1; font-size: 24px;"></path><path style="--index: 2"></path></svg>"#;
-        let jsx = transform(svg);
-        assert_eq!(jsx, r#"<svg><path style={{"--index":1,fontSize:24}}/><path style={{"--index":2}}/></svg>;"#)
+        code_test(
+            r#"<svg><path style="--index: 1; font-size: 24px;"></path><path style="--index: 2"></path></svg>"#,
+            r#"<svg><path style={{"--index":1,fontSize:24}}/><path style={{"--index":2}}/></svg>;"#
+        );
     }
 }

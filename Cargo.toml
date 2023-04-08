@@ -11,3 +11,6 @@ swc_common = "0.30.5"
 swc_core = { version = "0.74.2", features = ["testing"] }
 swc_ecmascript = { version = "0.226.2", features = ["codegen"] }
 swc_xml = "0.10.3"
+
+[dev-dependencies]
+testing = "0.32.5"
