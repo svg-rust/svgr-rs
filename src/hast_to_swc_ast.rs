@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use swc::atoms::JsWord;
 use swc_common::DUMMY_SP;
 use swc_ecmascript::ast::*;
@@ -6,6 +8,7 @@ use regex::{Regex, Captures};
 
 use super::decode_xml::*;
 use super::string_to_object_style::*;
+use super::mappings::*;
 
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
@@ -17,61 +20,6 @@ fn convert_aria_attribute(kebab_key: &str) -> String {
     let aria = parts[0];
     let lowercase_parts: String = parts[1..].join("").to_lowercase();
     format!("{}-{}", aria, lowercase_parts)
-}
-
-fn get_key(attr_name: &str, tag_name: &str) -> Ident {
-    let lower_case_name = attr_name.to_lowercase();
-    let rc_key = {
-        match tag_name {
-            "input" => {
-                match lower_case_name.as_str() {
-                    "checked" => Some("defaultChecked"),
-                    "value" => Some("defaultValue"),
-                    "maxlength" => Some("maxLength"),
-                    _ => None,
-                }
-            },
-            "form" => {
-                match lower_case_name.as_str() {
-                    "enctype" => Some("encType"),
-                    _ => None,
-                }
-            },
-            _ => None,
-        }
-    };
-
-    if let Some(k) = rc_key {
-        return Ident {
-            span: DUMMY_SP,
-            sym: k.into(),
-            optional: false,
-        }
-    }
-
-    let kebab_key = kebab_case(&attr_name);
-
-    if kebab_key.starts_with("aria-") {
-        return Ident {
-            span: DUMMY_SP,
-            sym: convert_aria_attribute(attr_name).into(),
-            optional: false,
-        }
-    }
-
-    if kebab_key.starts_with("data-") {
-        return Ident {
-            span: DUMMY_SP,
-            sym: attr_name.clone().into(),
-            optional: false,
-        }
-    }
-
-    Ident {
-        span: DUMMY_SP,
-        sym: attr_name.clone().into(),
-        optional: false,
-    }
 }
 
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
@@ -89,20 +37,6 @@ fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
         value: value.clone(),
         raw: None
     }))
-}
-
-fn all(children: &Vec<swc_xml::ast::Child>) -> Vec<JSXElementChild> {
-    children.into_iter()
-        .map(|n| {
-            match n {
-                swc_xml::ast::Child::Element(e) => Some(JSXElementChild::JSXElement(Box::new(element(&e)))),
-                swc_xml::ast::Child::Text(t) => text(t),
-                _ => None,
-            }
-        })
-        .filter(|n| n.is_some())
-        .map(|n| n.unwrap())
-        .collect()
 }
 
 fn comment(n: &swc_xml::ast::Comment) -> JSXText {
@@ -127,70 +61,154 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     }))
 }
 
-fn element(n: &swc_xml::ast::Element) -> JSXElement {
-    let attrs = n.attributes.iter().map(
-        |attr| {
-            let value = match attr.value.clone() {
-                Some(v) => Some(get_value(&attr.name, &v)),
-                None => None,
-            };
-
-            JSXAttrOrSpread::JSXAttr(JSXAttr {
-                span: DUMMY_SP,
-                name: JSXAttrName::Ident(get_key(&attr.name, &n.tag_name)),
-                value,
-            })
-        }
-    ).collect::<Vec<JSXAttrOrSpread>>();
-
-    let name = JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP));
-    let children = all(&n.children);
-
-    let opening = JSXOpeningElement {
-        span: DUMMY_SP,
-        name: name.clone(),
-        attrs,
-        self_closing: children.len() == 0,
-        type_args: None,
-    };
-
-    let closing = if children.len() > 0 {
-        Some(JSXClosingElement {
-            span: DUMMY_SP,
-            name,
-        })
-    } else {
-        None
-    };
-
-    JSXElement {
-        span: DUMMY_SP,
-        opening,
-        children,
-        closing,
-    }
-}
-
 pub struct HastVisitor {
     jsx: Option::<JSXElement>,
+    attr_mappings: HashMap::<&'static str, &'static str>,
 }
 
 impl HastVisitor {
+    fn new() -> Self {
+        Self {
+            jsx: None,
+            attr_mappings: create_attr_mappings(),
+        }
+    }
+
     pub fn get_jsx(&self) -> Option::<JSXElement> {
         self.jsx.clone()
+    }
+
+    fn element(&self, n: &swc_xml::ast::Element) -> JSXElement {
+        let attrs = n.attributes.iter().map(
+            |attr| {
+                let value = match attr.value.clone() {
+                    Some(v) => Some(get_value(&attr.name, &v)),
+                    None => None,
+                };
+    
+                JSXAttrOrSpread::JSXAttr(JSXAttr {
+                    span: DUMMY_SP,
+                    name: JSXAttrName::Ident(self.get_key(&attr.name, &n.tag_name)),
+                    value,
+                })
+            }
+        ).collect::<Vec<JSXAttrOrSpread>>();
+    
+        let name = JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP));
+        let children = self.all(&n.children);
+    
+        let opening = JSXOpeningElement {
+            span: DUMMY_SP,
+            name: name.clone(),
+            attrs,
+            self_closing: children.len() == 0,
+            type_args: None,
+        };
+    
+        let closing = if children.len() > 0 {
+            Some(JSXClosingElement {
+                span: DUMMY_SP,
+                name,
+            })
+        } else {
+            None
+        };
+    
+        JSXElement {
+            span: DUMMY_SP,
+            opening,
+            children,
+            closing,
+        }
+    }
+
+    fn all(&self, children: &Vec<swc_xml::ast::Child>) -> Vec<JSXElementChild> {
+        children.into_iter()
+            .map(|n| {
+                match n {
+                    swc_xml::ast::Child::Element(e) => Some(JSXElementChild::JSXElement(Box::new(self.element(&e)))),
+                    swc_xml::ast::Child::Text(t) => text(t),
+                    _ => None,
+                }
+            })
+            .filter(|n| n.is_some())
+            .map(|n| n.unwrap())
+            .collect()
+    }
+
+    fn get_key(&self, attr_name: &str, tag_name: &str) -> Ident {
+        let lower_case_name = attr_name.to_lowercase();
+        let rc_key = {
+            match tag_name {
+                "input" => {
+                    match lower_case_name.as_str() {
+                        "checked" => Some("defaultChecked"),
+                        "value" => Some("defaultValue"),
+                        "maxlength" => Some("maxLength"),
+                        _ => None,
+                    }
+                },
+                "form" => {
+                    match lower_case_name.as_str() {
+                        "enctype" => Some("encType"),
+                        _ => None,
+                    }
+                },
+                _ => None,
+            }
+        };
+
+        if let Some(k) = rc_key {
+            return Ident {
+                span: DUMMY_SP,
+                sym: k.into(),
+                optional: false,
+            }
+        }
+
+        let mapped_attr = self.attr_mappings.get(lower_case_name.as_str());
+        if let Some(k) = mapped_attr {
+            return Ident {
+                span: DUMMY_SP,
+                sym: k.clone().into(),
+                optional: false,
+            }
+        }
+    
+        let kebab_key = kebab_case(&attr_name);
+    
+        if kebab_key.starts_with("aria-") {
+            return Ident {
+                span: DUMMY_SP,
+                sym: convert_aria_attribute(attr_name).into(),
+                optional: false,
+            }
+        }
+    
+        if kebab_key.starts_with("data-") {
+            return Ident {
+                span: DUMMY_SP,
+                sym: attr_name.clone().into(),
+                optional: false,
+            }
+        }
+    
+        Ident {
+            span: DUMMY_SP,
+            sym: attr_name.clone().into(),
+            optional: false,
+        }
     }
 }
 
 impl Visit for HastVisitor {
     fn visit_element(&mut self, n: &swc_xml::ast::Element) {
-        self.jsx = Some(element(n));
+        self.jsx = Some(self.element(n));
     }
 }
 
 pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
-    let mut v = HastVisitor {
-        jsx: None,
-    };
+    let mut v = HastVisitor::new();
     hast.visit_with(&mut v);
     v.get_jsx()
 }
@@ -207,7 +225,7 @@ mod tests {
 
     fn transform(cm: Arc::<SourceMap>, fm: Arc<SourceFile>, minify: bool) -> String {
         let mut errors = vec![];
-        let xml_doc = parse_file_as_document(
+        let doc = parse_file_as_document(
             fm.borrow(),
             parser::ParserConfig {
                 ..Default::default()
@@ -215,7 +233,7 @@ mod tests {
             &mut errors
         ).unwrap();
 
-        match to_swc_ast(xml_doc) {
+        match to_swc_ast(doc) {
             Some(jsx) => {
                 let code = {
                     let mut buf = vec![];

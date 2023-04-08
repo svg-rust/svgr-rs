@@ -7,6 +7,7 @@ use swc_xml::{parser::{parse_file_as_document, parser}};
 mod decode_xml;
 mod string_to_object_style;
 mod hast_to_swc_ast;
+mod mappings;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -91,18 +92,15 @@ fn execute(input: PathBuf) {
     let code = {
         let mut buf = vec![];
 
-        {
-            let mut emitter = Emitter {
-                cfg: Config {
-                    ..Default::default()
-                },
-                cm: cm.clone(),
-                comments: None,
-                wr: JsWriter::new(cm, "\n", &mut buf, None),
-            };
-
-            emitter.emit_module(&m).unwrap();
-        }
+        let mut emitter = Emitter {
+            cfg: Config {
+                ..Default::default()
+            },
+            cm: cm.clone(),
+            comments: None,
+            wr: JsWriter::new(cm, "\n", &mut buf, None),
+        };
+        emitter.emit_module(&m).unwrap();
 
         String::from_utf8_lossy(&buf).to_string()
     };
