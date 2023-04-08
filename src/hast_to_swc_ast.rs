@@ -61,10 +61,6 @@ fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
     }))
 }
 
-fn comment(n: &swc_xml::ast::Comment) -> JSXText {
-    todo!()
-}
-
 fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     let value = n.data.to_string();
 
