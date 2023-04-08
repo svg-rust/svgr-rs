@@ -5,6 +5,7 @@ use swc_xml::{visit::{Visit, VisitWith}};
 use regex::{Regex, Captures};
 
 mod string_to_object_style;
+mod decode_xml;
 
 fn kebab_case(str: &str) -> String {
     let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
@@ -95,7 +96,7 @@ fn all(children: &Vec<swc_xml::ast::Child>) -> Vec<JSXElementChild> {
         .map(|n| {
             match n {
                 swc_xml::ast::Child::Element(e) => Some(JSXElementChild::JSXElement(Box::new(element(&e)))),
-                swc_xml::ast::Child::Text(t) => Some(JSXElementChild::JSXText(text(&t))),
+                swc_xml::ast::Child::Text(t) => text(t),
                 _ => None,
             }
         })
@@ -108,8 +109,19 @@ fn comment(n: &swc_xml::ast::Comment) -> JSXText {
     todo!()
 }
 
-fn text(n: &swc_xml::ast::Text) -> JSXText {
-    todo!()
+fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
+    let value = n.data.to_string();
+
+    let space_regex = Regex::new(r"^\s+$").unwrap();
+    if space_regex.is_match(value.as_str()) {
+        return None;
+    }
+
+    Some(JSXElementChild::JSXText(JSXText {
+        span: DUMMY_SP,
+        value: decode_xml::decode_xml(value.as_str()).into(),
+        raw: value.clone().into(),
+    }))
 }
 
 fn element(n: &swc_xml::ast::Element) -> JSXElement {
@@ -241,6 +253,27 @@ mod tests {
         let svg = r#"<svg aria-hidden="true"></svg>"#;
         let jsx = transform(svg);
         assert_eq!(jsx, r#"<svg aria-hidden="true"/>;"#)
+    }
+
+    #[test]
+    fn transforms_data_x() {
+        let svg = r#"<svg data-hidden="true"></svg>"#;
+        let jsx = transform(svg);
+        assert_eq!(jsx, r#"<svg data-hidden="true"/>;"#)
+    }
+
+    #[test]
+    fn preserves_mask_type() {
+        let svg = r#"<svg><mask mask-type="alpha"/></svg>"#;
+        let jsx = transform(svg);
+        assert_eq!(jsx, r#"<svg><mask mask-type="alpha"/></svg>;"#)
+    }
+
+    #[test]
+    fn string_literals_children_of_text_nodes_should_have_decoded_xml_entities() {
+        let svg = r#"<svg><text>&lt;</text></svg>"#;
+        let jsx = transform(svg);
+        assert_eq!(jsx, r#"<svg><text>{"<"}</text></svg>;"#)
     }
 
     #[test]
