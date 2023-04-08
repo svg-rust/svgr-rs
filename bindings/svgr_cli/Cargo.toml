@@ -1,0 +1,12 @@
+[package]
+name = "svgr_cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+bench = false
+name  = "svgr-rs"
+path  = "./src/main.rs"
+
+[dependencies]
+clap = { version = "4.2.0", features = ["derive"] }

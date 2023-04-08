@@ -1,0 +1,14 @@
+[workspace]
+members = ["svgr_cli"]
+
+[profile.release]
+# lto = true
+
+# We use CARGO_PROFILE_RELEASE_LTO for production builds
+# lto = "fat"
+
+# debug = true
+# opt-level = 'z'
+
+# Strip debug symbols
+strip = "symbols"
