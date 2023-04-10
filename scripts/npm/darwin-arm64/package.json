@@ -1,0 +1,40 @@
+{
+    "name": "@svgr-rs/core-darwin-arm64",
+    "version": "1.2.130",
+    "os": [
+        "darwin"
+    ],
+    "cpu": [
+        "arm64"
+    ],
+    "main": "svgr.darwin-arm64.node",
+    "files": [
+        "svgr.darwin-arm64.node",
+        "svgr"
+    ],
+    "description": "SVGR rewritten in Rust",
+    "keywords": [
+        "svgr",
+        "svg",
+        "react",
+        "cli",
+        "swc"
+    ],
+    "author": "SyMind",
+    "homepage": "https://github.com/SyMind/svgr-rs",
+    "license": "MIT",
+    "engines": {
+        "node": ">=14"
+    },
+    "publishConfig": {
+        "registry": "https://registry.npmjs.org/",
+        "access": "public"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/SyMind/svgr-rs.git"
+    },
+    "bugs": {
+        "url": "https://github.com/SyMind/svgr-rs/issues"
+    }
+}
