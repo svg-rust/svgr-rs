@@ -13,11 +13,19 @@ napi-derive = "2.12.2"
 
 clap = { version = "4.2.0", features = ["derive"] }
 regex = "1.7.3"
-swc = "0.259.2"
-swc_common = "0.30.5"
-swc_core = { version = "0.74.2", features = ["testing"] }
-swc_ecmascript = { version = "0.226.2", features = ["codegen"] }
 swc_xml = "0.10.3"
+swc_core = { version = "0.74.2", features = [
+  "allocator_node",
+  "ecma_ast",
+  "ecma_ast_serde",
+  "common_concurrent",
+  "bundler",
+  "ecma_loader",
+  "ecma_transforms",
+  "ecma_visit",
+  "ecma_codegen",
+  "base_node",
+] }
 
 [build-dependencies]
 napi-build = "2.0.1"

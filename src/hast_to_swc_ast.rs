@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-use swc::atoms::JsWord;
-use swc_common::DUMMY_SP;
-use swc_ecmascript::ast::*;
+use swc_core::{
+    common::DUMMY_SP,
+    ecma::{ast::*, atoms::JsWord}
+};
 use swc_xml::{visit::{Visit, VisitWith}};
 use regex::{Regex, Captures};
 
@@ -234,8 +235,10 @@ pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
 #[cfg(test)]
 mod tests {
     use std::{sync::Arc, borrow::Borrow, path::PathBuf};
-    use swc_common::{SourceMap, SourceFile, FileName};
-    use swc_ecmascript::{codegen::{text_writer::JsWriter, Emitter, Config}};
+    use swc_core::{
+        common::{SourceMap, SourceFile, FileName},
+        ecma::codegen::{text_writer::JsWriter, Emitter, Config},
+    };
     use swc_xml::parser::{parse_file_as_document, parser};
     use testing::NormalizedOutput;
 

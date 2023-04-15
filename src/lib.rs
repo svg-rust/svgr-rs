@@ -6,9 +6,11 @@
 extern crate napi_derive;
 
 use std::{sync::Arc, borrow::Borrow};
-use swc_common::{SourceMap, DUMMY_SP, FileName};
-use swc_ecmascript::{ast::*, codegen::{text_writer::JsWriter, Emitter, Config}};
 use swc_xml::{parser::{parse_file_as_document, parser}};
+use swc_core::{
+    common::{SourceMap, DUMMY_SP, FileName},
+    ecma::{ast::*, codegen::{text_writer::JsWriter, Emitter, Config}},
+};
 use napi::bindgen_prelude::*;
 
 mod hast_to_swc_ast;
