@@ -5,6 +5,7 @@ use swc_core::{
         visit::VisitMut
     },
 };
+use super::core;
 
 const ELEMENTS: [&str; 2] = ["svg", "Svg"];
 
@@ -19,10 +20,37 @@ pub struct Visitor {
 }
 
 impl Visitor {
-    pub fn new() -> Self {
+    pub fn new(config: core::config::Config) -> Self {
+        let mut height: Option<StrOrNum> = None;
+        let mut width: Option<StrOrNum> = None;
+    
+        match config.icon {
+            Some(icon) => {
+                match icon {
+                    core::config::Icon::Str(s) => {
+                        height = Some(StrOrNum::Str(s.clone()));
+                        width = Some(StrOrNum::Str(s.clone()));
+                    },
+                    core::config::Icon::Num(n) => {
+                        height = Some(StrOrNum::Num(n));
+                        width =Some(StrOrNum::Num(n));
+                    },
+                    core::config::Icon::Bool(_) => {
+                        // TODO: native
+                        height = None;
+                        width = None;
+                    },
+                }
+            },
+            None => {
+                height = None;
+                width = None;
+            }
+        }
+
         Self {
-            height: Some(StrOrNum::Str("1em".to_string())),
-            width: Some(StrOrNum::Str("1em".to_string())),
+            height,
+            width,
         }
     }
 }
