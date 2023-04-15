@@ -10,6 +10,7 @@ const svgCode = `
 
 const jsCode = await transform(
   svgCode,
-  // { icon: true },
-  // { componentName: 'MyComponent' },
+  { icon: true },
+  { componentName: 'MyComponent' },
 )
+console.log(jsCode)

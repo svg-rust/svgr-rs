@@ -1,3 +1,5 @@
+#![feature(path_file_prefix)]
+
 #![deny(clippy::all)]
 
 #[macro_use]
@@ -10,9 +12,10 @@ use swc_xml::{parser::{parse_file_as_document, parser}};
 use napi::bindgen_prelude::*;
 
 mod hast_to_swc_ast;
+pub mod core;
 
 #[napi]
-async fn transform(code: String) -> Result<String> {
+pub async fn transform(code: String, config: Option<core::config::Config>, state: Option<core::state::Config>) -> Result<String> {
     let cm = Arc::<SourceMap>::default();
 
     let fm = cm.new_source_file(FileName::Anon, code.to_string());
