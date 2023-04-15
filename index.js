@@ -252,6 +252,6 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { sum } = nativeBinding
+const { transform } = nativeBinding
 
-module.exports.sum = sum
+module.exports.transform = transform
