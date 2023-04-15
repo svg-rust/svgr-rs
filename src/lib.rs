@@ -9,15 +9,23 @@ use std::{sync::Arc, borrow::Borrow};
 use swc_xml::{parser::{parse_file_as_document, parser}};
 use swc_core::{
     common::{SourceMap, DUMMY_SP, FileName},
-    ecma::{ast::*, codegen::{text_writer::JsWriter, Emitter, Config}},
+    ecma::{
+        ast::*,
+        codegen::{text_writer::JsWriter, Emitter, Config},
+        visit::{FoldWith, as_folder},
+    },
+    node::get_deserialized,
 };
 use napi::bindgen_prelude::*;
 
 mod hast_to_swc_ast;
-pub mod core;
+mod core;
+mod svg_em_dimensions;
 
 #[napi]
-pub async fn transform(code: String, config: Option<core::config::Config>, state: Option<core::state::Config>) -> Result<String> {
+pub async fn transform(code: String, cfg: Buffer, state: Option<core::state::Config>) -> Result<String> {
+    let config: core::config::Config = get_deserialized(&cfg)?;
+
     let cm = Arc::<SourceMap>::default();
 
     let fm = cm.new_source_file(FileName::Anon, code.to_string());
@@ -86,6 +94,9 @@ pub async fn transform(code: String, config: Option<core::config::Config>, state
         body,
         shebang: None,
     };
+
+    // svg em dimensions
+    let m = m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(config)));
 
     let mut buf = vec![];
 
