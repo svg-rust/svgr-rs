@@ -2,28 +2,42 @@
 
 <p align="center">SVGR rewritten in Rust 🦀</p>
 
-# Command Line
+# Node.js
+
+Use SVGR in Node.js to complex transformations or tools.
 
 ## Install
 
-Depending you usage, you can install `@svgr-rs/cli` locally in your project:
-
 ```sh
-npm install --save-dev @svgr-rs/cli
+npm install --save-dev @svgr-rs/core
 # or use yarn
-yarn add --dev @svgr-rs/cli
+yarn add --dev @svgr-rs/core
 ```
 
-or use it on the fly using npx `@svgr-rs/cli`.
+## Usage
 
-## Transform a single file
+Import `transform` from `@svgr-rs/core` to transform a file. It takes three arguments:
 
-### From file
+* `source`: the SVG source code to transform
+* `options`: the options used to transform the SVG
+* `state`: a state linked to the transformation
 
-Transforms a single file by specifying file as the single argument.
+```js
+import { transform } from '@svgr-rs/core'
 
-```sh
-npx @svgr-rs/cli -- icons/clock-icon.svg
+const svgCode = `
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink">
+  <rect x="10" y="10" height="100" width="100"
+    style="stroke:#ff0000; fill: #0000ff"/>
+</svg>
+`
+
+const jsCode = await transform(
+  svgCode,
+  { icon: true },
+  { componentName: 'MyComponent' },
+)
 ```
 
 # License
