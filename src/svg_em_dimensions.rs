@@ -21,8 +21,8 @@ pub struct Visitor {
 
 impl Visitor {
     pub fn new(config: core::config::Config) -> Self {
-        let mut height: Option<StrOrNum> = None;
-        let mut width: Option<StrOrNum> = None;
+        let height: Option<StrOrNum>;
+        let width: Option<StrOrNum>;
     
         match config.icon {
             Some(icon) => {
@@ -33,7 +33,7 @@ impl Visitor {
                     },
                     core::config::Icon::Num(n) => {
                         height = Some(StrOrNum::Num(n));
-                        width =Some(StrOrNum::Num(n));
+                        width = Some(StrOrNum::Num(n));
                     },
                     core::config::Icon::Bool(_) => {
                         // TODO: native

@@ -24,7 +24,9 @@ fn uppercase_first_letter(s: &str) -> String {
     let mut cs = s.chars();
     match cs.next() {
         None => String::new(),
-        Some(f) => f.to_uppercase().chain(cs).collect(),
+        Some(f) => {
+            f.to_uppercase().chain(cs).collect()
+        },
     }
 }
 
@@ -33,13 +35,16 @@ const SEPARATORS: &str = r"[_.\- ]+";
 
 fn pascal_case(input: &str) -> String {
     let separators_and_identifier = Regex::new(format!("{}{}", SEPARATORS, IDENTIFIER).as_str()).unwrap();
-    let numbers_and_identifier = Regex::new(format!("\\d+{}", IDENTIFIER).as_str()).unwrap();
-    let rep = |caps: &regex::Captures| {
+    let numbers_and_identifier = Regex::new(format!("(\\d+){}", IDENTIFIER).as_str()).unwrap();
+    let result = separators_and_identifier.replace_all(input, |caps: &regex::Captures| {
         let identifier = caps.get(1).unwrap().as_str();
         identifier.to_uppercase()
-    };
-    let result = separators_and_identifier.replace_all(input, rep).to_string();
-    let result = numbers_and_identifier.replace_all(&result, rep).to_string();
+    }).to_string();
+    let result = numbers_and_identifier.replace_all(&result, |caps: &regex::Captures| {
+        let num = caps.get(1).unwrap().as_str();
+        let identifier = caps.get(2).unwrap().as_str();
+        format!("{}{}", num, identifier.to_uppercase())
+    }).to_string();
     uppercase_first_letter(&result)
 }
 
@@ -53,12 +58,25 @@ fn get_component_name(file_path: &str) -> String {
     format!("Svg{}", pascal_case_file_name)
 }
 
-pub fn expand_state(state: &Config) -> InternalConfig {
-    InternalConfig {
-        file_path: state.file_path.clone(),
-        component_name: match state.file_path.clone() {
-            None => "SvgComponent".to_string(),
-            Some(path) => get_component_name(&path)
+pub fn expand_state(state: Option<&Config>) -> InternalConfig {
+    match state {
+        Some(state) => {
+            InternalConfig {
+                file_path: state.file_path.clone(),
+                component_name: match state.component_name.clone() {
+                    Some(component_name) => component_name,
+                    None => {
+                        match state.file_path.clone() {
+                            None => "SvgComponent".to_string(),
+                            Some(path) => get_component_name(&path)
+                        }
+                    }
+                }
+            }
+        },
+        None => InternalConfig {
+            file_path: None,
+            component_name: "SvgComponent".to_string(),
         }
     }
 }
@@ -69,84 +87,91 @@ mod tests {
 
     #[test]
     fn test_1() {
-        let input = Config {
-            file_path: None,
-            component_name: None,
-            caller: None,
-        };
-        let internal_config = expand_state(&input);
+        let internal_config = expand_state(None);
         assert_eq!(internal_config.component_name, "SvgComponent");
     }
 
     #[test]
     fn test_2() {
-        let input = Config {
+        let input = Some(Config {
             file_path: Some("hello.svg".to_string()),
             component_name: None,
             caller: None,
-        };
-        let internal_config = expand_state(&input);
+        });
+        let internal_config = expand_state(input.as_ref());
         assert_eq!(internal_config.file_path.unwrap(), "hello.svg");
         assert_eq!(internal_config.component_name, "SvgHello");
     }
 
     #[test]
     fn test_3() {
-        let input = Config {
+        let input = Some(Config {
             file_path: Some("hello-you.svg".to_string()),
             component_name: None,
             caller: None,
-        };
-        let internal_config = expand_state(&input);
+        });
+        let internal_config = expand_state(input.as_ref());
         assert_eq!(internal_config.file_path.unwrap(), "hello-you.svg");
         assert_eq!(internal_config.component_name, "SvgHelloYou");
     }
 
     #[test]
     fn test_4() {
-        let input = Config {
+        let input = Some(Config {
             file_path: Some("hello_you.svg".to_string()),
             component_name: None,
             caller: None,
-        };
-        let internal_config = expand_state(&input);
+        });
+        let internal_config = expand_state(input.as_ref());
         assert_eq!(internal_config.file_path.unwrap(), "hello_you.svg");
         assert_eq!(internal_config.component_name, "SvgHelloYou");
     }
 
     #[test]
     fn test_5() {
-        let input = Config {
+        let input = Some(Config {
             file_path: Some("1_big_svg.svg".to_string()),
             component_name: None,
             caller: None,
-        };
-        let internal_config = expand_state(&input);
+        });
+        let internal_config = expand_state(input.as_ref());
         assert_eq!(internal_config.file_path.unwrap(), "1_big_svg.svg");
         assert_eq!(internal_config.component_name, "Svg1BigSvg");
     }
 
     #[test]
     fn test_6() {
-        let input = Config {
+        let input = Some(Config {
             file_path: Some("a&b~c-d_e.svg".to_string()),
             component_name: None,
             caller: None,
-        };
-        let internal_config = expand_state(&input);
+        });
+        let internal_config = expand_state(input.as_ref());
         assert_eq!(internal_config.file_path.unwrap(), "a&b~c-d_e.svg");
         assert_eq!(internal_config.component_name, "SvgAbcDE");
     }
 
     #[test]
     fn test_7() {
-        let input = Config {
+        let input = Some(Config {
             file_path: Some("Arrow up.svg".to_string()),
             component_name: None,
             caller: None,
-        };
-        let internal_config = expand_state(&input);
+        });
+        let internal_config = expand_state(input.as_ref());
         assert_eq!(internal_config.file_path.unwrap(), "Arrow up.svg");
         assert_eq!(internal_config.component_name, "SvgArrowUp");
+    }
+
+    #[test]
+    fn test_8() {
+        let input = Some(Config {
+            file_path: Some("Arrow up.svg".to_string()),
+            component_name: Some("MyComponent".to_string()),
+            caller: None,
+        });
+        let internal_config = expand_state(input.as_ref());
+        assert_eq!(internal_config.file_path.unwrap(), "Arrow up.svg");
+        assert_eq!(internal_config.component_name, "MyComponent");
     }
 }

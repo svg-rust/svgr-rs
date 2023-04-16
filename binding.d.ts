@@ -16,4 +16,4 @@ export interface Config {
   componentName?: string
   caller?: Caller
 }
-export function transform(code: string, cfg: Buffer, state?: Config | undefined | null): Promise<string>
+export function transform(code: string, config: Buffer, state?: Config | undefined | null): Promise<string>

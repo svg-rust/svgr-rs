@@ -23,11 +23,11 @@ mod core;
 mod svg_em_dimensions;
 
 #[napi]
-pub async fn transform(code: String, cfg: Buffer, state: Option<core::state::Config>) -> Result<String> {
-    let config: core::config::Config = get_deserialized(&cfg)?;
+pub async fn transform(code: String, config: Buffer, state: Option<core::state::Config>) -> Result<String> {
+    let config: core::config::Config = get_deserialized(&config)?;
+    let state = core::state::expand_state(state.as_ref());
 
     let cm = Arc::<SourceMap>::default();
-
     let fm = cm.new_source_file(FileName::Anon, code.to_string());
 
     let mut errors = vec![];
@@ -69,7 +69,10 @@ pub async fn transform(code: String, cfg: Buffer, state: Option<core::state::Con
             declare: false,
             decls: vec![VarDeclarator {
                 span: DUMMY_SP,
-                name: Pat::Ident(BindingIdent::from(Ident::new("SVG".into(), DUMMY_SP))),
+                name: Pat::Ident(BindingIdent::from(Ident::new(
+                    state.component_name.clone().into(),
+                    DUMMY_SP
+                ))),
                 definite: false,
                 init: Some(Box::new(Expr::Arrow(ArrowExpr {
                     span: DUMMY_SP,
@@ -86,7 +89,10 @@ pub async fn transform(code: String, cfg: Buffer, state: Option<core::state::Con
 
     body.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
         span: DUMMY_SP,
-        expr: Box::new(Expr::Ident(Ident::new("SVG".into(), DUMMY_SP))),
+        expr: Box::new(Expr::Ident(Ident::new(
+            state.component_name.into(),
+            DUMMY_SP
+        ))),
     })));
 
     let m = Module {
