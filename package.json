@@ -24,6 +24,7 @@
   "license": "MIT",
   "devDependencies": {
     "@napi-rs/cli": "^2.15.2",
+    "@types/node": "^18.15.11",
     "ava": "^5.1.1"
   },
   "ava": {
@@ -34,8 +35,8 @@
   },
   "scripts": {
     "artifacts": "napi artifacts",
-    "build": "napi build --platform --release",
-    "build:debug": "napi build --platform",
+    "build": "napi build --platform --release --js binding.js --dts binding.d.ts",
+    "build:debug": "napi build --platform --js binding.js --dts binding.d.ts",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "universal": "napi universal",

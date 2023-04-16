@@ -13,6 +13,7 @@ napi-derive = "2.12.2"
 
 clap = { version = "4.2.0", features = ["derive"] }
 regex = "1.7.3"
+serde = { version = "1", features = ["derive"] }
 swc_xml = "0.10.3"
 swc_core = { version = "0.74.2", features = [
   "allocator_node",
@@ -25,6 +26,7 @@ swc_core = { version = "0.74.2", features = [
   "ecma_visit",
   "ecma_codegen",
   "base_node",
+  "__parser",
 ] }
 
 [build-dependencies]

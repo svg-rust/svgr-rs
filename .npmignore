@@ -10,4 +10,6 @@ yarn.lock
 *.node
 .yarn
 __test__
+fixture
 renovate.json
+.editorconfig
