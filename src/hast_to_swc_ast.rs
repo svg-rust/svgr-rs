@@ -312,7 +312,7 @@ mod tests {
         assert_eq!(res, expected)
     }
 
-    #[testing::fixture("fixture/*/*.svg")]
+    #[testing::fixture("__fixture__/*/*.svg")]
     fn pass(input: PathBuf) {
         document_test(input);
     }

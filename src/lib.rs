@@ -77,7 +77,10 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
                 init: Some(Box::new(Expr::Arrow(ArrowExpr {
                     span: DUMMY_SP,
                     params: vec![Pat::Ident(BindingIdent::from(Ident::new("props".into(), DUMMY_SP)))],
-                    body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::JSXElement(Box::new(expr))))),
+                    body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::Paren(ParenExpr {
+                        expr: Box::new(Expr::JSXElement(Box::new(expr))),
+                        span: DUMMY_SP,
+                    })))),
                     is_async: false,
                     is_generator: false,
                     type_params: None,
