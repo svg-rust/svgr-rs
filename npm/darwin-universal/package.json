@@ -1,0 +1,15 @@
+{
+  "name": "@svgr-rs/core-darwin-universal",
+  "version": "0.0.0",
+  "os": [
+    "darwin"
+  ],
+  "main": "svgr.darwin-universal.node",
+  "files": [
+    "svgr.darwin-universal.node"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">= 10"
+  }
+}
