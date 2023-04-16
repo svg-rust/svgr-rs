@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "main": "index.js",
   "types": "index.d.ts",
+  "author": "SyMind <dacongsama@live.com>",
   "napi": {
     "name": "svgr-rs",
     "triples": {
@@ -40,5 +41,21 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
+  },
+  "keywords": [
+    "svgr",
+    "svg",
+    "react",
+    "core",
+    "api",
+    "swc"
+  ],
+  "homepage": "https://github.com/SyMind/svgr-rs",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SyMind/svgr-rs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SyMind/svgr-rs/issues"
   }
 }
