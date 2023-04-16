@@ -4,9 +4,9 @@
   "os": [
     "darwin"
   ],
-  "main": "svgr.darwin-universal.node",
+  "main": "svgr-rs.darwin-universal.node",
   "files": [
-    "svgr.darwin-universal.node"
+    "svgr-rs.darwin-universal.node"
   ],
   "license": "MIT",
   "engines": {

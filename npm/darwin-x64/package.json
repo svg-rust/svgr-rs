@@ -7,9 +7,9 @@
   "cpu": [
     "x64"
   ],
-  "main": "svgr.darwin-x64.node",
+  "main": "svgr-rs.darwin-x64.node",
   "files": [
-    "svgr.darwin-x64.node"
+    "svgr-rs.darwin-x64.node"
   ],
   "license": "MIT",
   "engines": {

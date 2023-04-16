@@ -7,9 +7,9 @@
   "cpu": [
     "arm64"
   ],
-  "main": "svgr.win32-arm64-msvc.node",
+  "main": "svgr-rs.win32-arm64-msvc.node",
   "files": [
-    "svgr.win32-arm64-msvc.node"
+    "svgr-rs.win32-arm64-msvc.node"
   ],
   "license": "MIT",
   "engines": {

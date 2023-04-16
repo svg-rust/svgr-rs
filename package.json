@@ -1,12 +1,13 @@
 {
   "name": "@svgr-rs/core",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "main": "index.js",
   "types": "index.d.ts",
   "author": "SyMind <dacongsama@live.com>",
   "napi": {
     "name": "svgr-rs",
     "triples": {
+      "defaults": false,
       "additional": [
         "aarch64-apple-darwin",
         "aarch64-pc-windows-msvc",
