@@ -58,8 +58,8 @@ impl Visitor {
 impl VisitMut for Visitor {
     fn visit_mut_jsx_opening_element(&mut self, n: &mut JSXOpeningElement) {
         let is_svg = ELEMENTS.iter().any(|element| {
-            if let JSXElementName::Ident(e) = n.name.clone() {
-                return e.sym.to_string() == *element
+            if let JSXElementName::Ident(ident) = n.name.clone() {
+                return ident.sym.to_string() == *element
             }
             false
         });

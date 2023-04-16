@@ -20,6 +20,8 @@ use napi::bindgen_prelude::*;
 
 mod hast_to_swc_ast;
 mod core;
+
+mod add_jsx_attribute;
 mod svg_em_dimensions;
 
 #[napi]
