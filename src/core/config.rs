@@ -18,5 +18,8 @@ impl Default for Icon {
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     #[serde(default)]
+    pub ref_: Option<bool>,
+
+    #[serde(default)]
     pub icon: Option<Icon>
 }

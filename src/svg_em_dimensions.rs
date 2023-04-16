@@ -20,11 +20,11 @@ pub struct Visitor {
 }
 
 impl Visitor {
-    pub fn new(config: core::config::Config) -> Self {
+    pub fn new(config: &core::config::Config) -> Self {
         let height: Option<StrOrNum>;
         let width: Option<StrOrNum>;
     
-        match config.icon {
+        match config.icon.clone() {
             Some(icon) => {
                 match icon {
                     core::config::Icon::Str(s) => {

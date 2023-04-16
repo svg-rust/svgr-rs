@@ -5,6 +5,7 @@ use swc_core::{
         visit::VisitMut
     },
 };
+use super::core;
 
 pub enum AttributeValue {
     Bool(bool),
@@ -26,21 +27,32 @@ pub struct Attribute {
     pub position: Option<AttributePosition>,
 }
 
-pub struct Options {
-    elements: Vec<String>,
-    attributes: Vec<Attribute>,
-}
-
 pub struct Visitor {
     elements: Vec<String>,
     attributes: Vec<Attribute>,
 }
 
 impl Visitor {
-    pub fn new(opts: Options) -> Self {
+    pub fn new(config: &core::config::Config) -> Self {
+        let mut attributes = Vec::new();
+
+        match config.ref_ {
+            Some(r) => {
+                if r {
+                    attributes.push(Attribute {
+                        name: "ref".to_string(),
+                        value: Some(AttributeValue::Str("ref".to_string())),
+                        literal: true,
+                        ..Attribute::default()
+                    });
+                }
+            },
+            None => {}
+        }
+
         Self {
-            elements: opts.elements,
-            attributes: opts.attributes,
+            elements: vec!["svg".to_string(), "Svg".to_string()],
+            attributes,
         }
     }
 }
@@ -197,6 +209,11 @@ mod tests {
 
     use super::*;
 
+    pub struct Options {
+        elements: Vec<String>,
+        attributes: Vec<Attribute>,
+    }
+
     fn code_test(input: &str, opts: Options, expected: &str) {
         let cm = Arc::<SourceMap>::default();
         let fm = cm.new_source_file(FileName::Anon, input.to_string());
@@ -215,7 +232,10 @@ mod tests {
         let mut parser = Parser::new_from(lexer);
         let module = parser.parse_module().unwrap();
 
-        let module = module.fold_with(&mut as_folder(Visitor::new(opts)));
+        let module = module.fold_with(&mut as_folder(Visitor {
+            elements: opts.elements,
+            attributes: opts.attributes,
+        }));
 
         let mut buf = vec![];
         let mut emitter = Emitter {
