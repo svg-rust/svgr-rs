@@ -15,6 +15,7 @@ pub struct Config {
     pub caller: Option<Caller>,
 }
 
+#[derive(Default)]
 pub struct InternalConfig {
     pub file_path: Option<String>,
     pub component_name: String,

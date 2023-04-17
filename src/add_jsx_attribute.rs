@@ -36,7 +36,7 @@ impl Visitor {
     pub fn new(config: &core::config::Config) -> Self {
         let mut attributes = Vec::new();
 
-        match config.ref_ {
+        match config._ref {
             Some(r) => {
                 if r {
                     attributes.push(Attribute {

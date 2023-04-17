@@ -43,6 +43,11 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
 
     let jsx_element = hast_to_swc_ast::to_swc_ast(document);
 
+    let jsx_element = match jsx_element {
+        Some(jsx_element) => jsx_element,
+        None => panic!("This is invalid SVG")
+    };
+
     let m =  transform_svg_component::transform(jsx_element, &config, &state);
 
     let m = m.fold_with(&mut as_folder(add_jsx_attribute::Visitor::new(&config)));
