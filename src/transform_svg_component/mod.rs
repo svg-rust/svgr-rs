@@ -60,26 +60,9 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
 
     let mut body = vec![];
 
-    body.push(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
-        span: DUMMY_SP,
-        specifiers: vec![
-            ImportSpecifier::Namespace(ImportStarAsSpecifier {
-                span: DUMMY_SP,
-                local: Ident {
-                    span: DUMMY_SP,
-                    sym: "React".into(),
-                    optional: false,
-                },
-            }),
-        ],
-        src: Box::new(Str {
-            span: DUMMY_SP,
-            value: "react".into(),
-            raw: None,
-        }),
-        type_only: false,
-        asserts: None,
-    })));
+    for import in variables.imports {
+        body.push(import);
+    }
 
     body.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
         span: DUMMY_SP,
@@ -95,10 +78,7 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
             init: Some(Box::new(Expr::Arrow(ArrowExpr {
                 span: DUMMY_SP,
                 params: variables.props,
-                body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::Paren(ParenExpr {
-                    expr: Box::new(Expr::JSXElement(Box::new(variables.jsx))),
-                    span: DUMMY_SP,
-                })))),
+                body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::JSXElement(Box::new(variables.jsx))))),
                 is_async: false,
                 is_generator: false,
                 type_params: None,
@@ -107,13 +87,9 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
         }],
     })))));
 
-    body.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
-        span: DUMMY_SP,
-        expr: Box::new(Expr::Ident(Ident::new(
-            state.component_name.clone().into(),
-            DUMMY_SP
-        ))),
-    })));
+    for export in variables.exports {
+        body.push(export);
+    }
 
     Module {
         span: DUMMY_SP,
@@ -124,13 +100,12 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
 
 #[cfg(test)]
 mod tests {
-    use std::{sync::Arc, borrow::Borrow, path::PathBuf};
+    use std::{sync::Arc, borrow::Borrow};
     use swc_core::{
-        common::{SourceMap, SourceFile, FileName},
-        ecma::codegen::{text_writer::JsWriter, Emitter, Config},
+        common::{SourceMap, FileName},
+        ecma::codegen::{text_writer::JsWriter, Emitter},
     };
     use swc_xml::parser::{parse_file_as_document, parser};
-    use testing::NormalizedOutput;
 
     use crate::core;
     use crate::hast_to_swc_ast;
@@ -181,10 +156,10 @@ mod tests {
             },
             r#"import * as React from "react";
 import { forwardRef } from "react";
-const SvgComponent = (_, ref) => <svg><g /></svg>;
+const SvgComponent = (_, ref)=><svg><g/></svg>;
 const ForwardRef = forwardRef(SvgComponent);
 export default ForwardRef;
-            "#
+"#
         )
     }
 }
