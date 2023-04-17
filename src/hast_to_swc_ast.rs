@@ -254,42 +254,32 @@ mod tests {
             &mut errors
         ).unwrap();
 
-        match to_swc_ast(doc) {
-            Some(jsx) => {
-                let code = {
-                    let mut buf = vec![];
-            
-                    let new_line = {
-                        if minify {
-                            ""
-                        } else {
-                            "\n"
-                        }
-                    };
-                    let mut emitter = Emitter {
-                        cfg: Config {
-                            minify,
-                            ..Default::default()
-                        },
-                        cm: cm.clone(),
-                        comments: None,
-                        wr: JsWriter::new(cm, new_line, &mut buf, None),
-                    };
-        
-                    emitter.emit_module_item(&ModuleItem::Stmt(
-                        Stmt::Expr(ExprStmt {
-                            span: DUMMY_SP,
-                            expr: Box::new(Expr::JSXElement(Box::new(jsx))),
-                        })
-                    )).unwrap();
-            
-                    String::from_utf8_lossy(&buf).to_string()
-                };
-                
-                code
+        let jsx = to_swc_ast(doc).unwrap();
+
+        let mut buf = vec![];
+
+        let new_line = match minify {
+            true => "",
+            false => "\n"
+        };
+        let mut emitter = Emitter {
+            cfg: Config {
+                minify,
+                ..Default::default()
             },
-            None => panic!("No JSX element found"),
-        }
+            cm: cm.clone(),
+            comments: None,
+            wr: JsWriter::new(cm, new_line, &mut buf, None),
+        };
+
+        emitter.emit_module_item(&ModuleItem::Stmt(
+            Stmt::Expr(ExprStmt {
+                span: DUMMY_SP,
+                expr: Box::new(Expr::JSXElement(Box::new(jsx))),
+            })
+        )).unwrap();
+
+        String::from_utf8_lossy(&buf).to_string()
     }
 
     fn document_test(input: PathBuf) {
