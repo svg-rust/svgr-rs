@@ -48,6 +48,7 @@ pub struct JSXRuntimeImport {
 #[serde(rename_all = "camelCase")]
 pub struct Config {
     #[serde(default)]
+    #[serde(rename(serialize = "ref"))]
     pub _ref: Option<bool>,
 
     #[serde(default)]

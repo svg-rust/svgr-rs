@@ -17,10 +17,10 @@ test('sum from native', async t => {
   )
 
   const expected = `import * as React from "react";
-const MyComponent = (props)=>(<svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1em" height="1em"><rect x={10} y={10} height={100} width={100} style={{
+const MyComponent = (props)=><svg xmlns="http://www.w3.org/2000/svg" xmlnsXlink="http://www.w3.org/1999/xlink" width="1em" height="1em"><rect x={10} y={10} height={100} width={100} style={{
         stroke: "#ff0000",
         fill: "#0000ff"
-    }}/></svg>);
+    }}/></svg>;
 export default MyComponent;
 `
 
