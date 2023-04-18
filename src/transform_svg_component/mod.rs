@@ -23,6 +23,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
         _ref: config._ref.unwrap_or(false),
         native: config.native.unwrap_or(false),
         memo: config.memo.unwrap_or(false),
+        named_export: config.named_export.clone(),
         ..Default::default()
     };
     
@@ -447,6 +448,55 @@ import { memo } from "react";
 const SvgComponent = ()=><svg><g/></svg>;
 const Memo = memo(SvgComponent);
 export default Memo;
+"#
+        );
+    }
+
+    #[test]
+    fn with_both_memo_and_ref_option_wrap_component_in_react_memo_and_react_forward_ref() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                memo: Some(true),
+                _ref: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import { forwardRef, memo } from "react";
+const SvgComponent = (_, ref)=><svg><g/></svg>;
+const ForwardRef = forwardRef(SvgComponent);
+const Memo = memo(ForwardRef);
+export default Memo;
+"#
+        );
+    }
+
+    #[test]
+    fn with_named_export_option_and_previous_export_state_has_custom_named_export() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                named_export: Some("Component".to_string()),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                caller: Some(core::state::Caller {
+                    previous_export: Some("var img = new Image(); img.src = '...'; export default img;".to_string()),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export { SvgComponent as Component };
+var img = new Image();
+img.src = '...';
+export default img;
 "#
         );
     }

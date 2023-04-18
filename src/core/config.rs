@@ -79,5 +79,8 @@ pub struct Config {
     pub jsx_runtime: Option<JSXRuntime>,
 
     #[serde(default)]
-    pub jsx_runtime_import: Option<JSXRuntimeImport>
+    pub jsx_runtime_import: Option<JSXRuntimeImport>,
+
+    #[serde(default)]
+    pub named_export: Option<String>,
 }
