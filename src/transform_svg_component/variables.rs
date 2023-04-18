@@ -54,6 +54,8 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
     let mut exports = vec![];
 
     let import_source = opts.import_source.unwrap_or("react".to_string());
+    let expand_props = opts.expand_props.unwrap_or(ExpandProps::Bool(false));
+
     let mut export_identifier = state.component_name.clone();
 
     if let Some(jsx_runtime) = opts.jsx_runtime {
@@ -110,6 +112,36 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
             optional: false,
             type_ann: None,
         }));
+    }
+
+    if let ExpandProps::Bool(false) = expand_props {
+        let existing = if props.len() > 0 {
+            if let Pat::Object(ref mut object_pat) = props[0] {
+                let identifier = Pat::Ident(BindingIdent::from(Ident::new(
+                    "props".into(),
+                    DUMMY_SP
+                )));
+                object_pat.props.push(ObjectPatProp::Rest(RestPat {
+                    span: DUMMY_SP,
+                    dot3_token: DUMMY_SP,
+                    arg: Box::new(identifier),
+                    type_ann: None,
+                }));
+
+                true
+            } else {
+                false
+            }
+        } else {
+            false
+        };
+        
+        if !existing {
+            props.push(Pat::Ident(BindingIdent::from(Ident::new(
+                "props".into(),
+                DUMMY_SP
+            ))));
+        }
     }
 
     if opts._ref {
