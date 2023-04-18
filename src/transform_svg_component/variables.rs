@@ -91,6 +91,27 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         get_or_create_import(&mut imports, "react-native-svg", specifier);
     }
 
+    if opts.title_prop || opts.desc_prop {
+        let mut properties = vec![];
+
+        if opts.title_prop {
+            properties.push(create_property("title"));
+            properties.push(create_property("titleId"));
+        }
+
+        if opts.desc_prop {
+            properties.push(create_property("desc"));
+            properties.push(create_property("descId"));
+        }
+
+        props.push(Pat::Object(ObjectPat {
+            span: DUMMY_SP,
+            props: properties,
+            optional: false,
+            type_ann: None,
+        }));
+    }
+
     if opts._ref {
         if props.len() == 0 {
             props.push(Pat::Ident(BindingIdent::from(Ident::new(
@@ -263,4 +284,12 @@ fn get_or_create_import(imports: &mut Vec<ModuleItem>, soruce_value: &str, speci
         asserts: None,
     }));
     imports.push(module_item);
+}
+
+fn create_property(key: &str) -> ObjectPatProp {
+    ObjectPatProp::Assign(AssignPatProp {
+        span: DUMMY_SP,
+        key: Ident::new(key.into(), DUMMY_SP),
+        value: None
+    })
 }

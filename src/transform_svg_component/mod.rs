@@ -199,4 +199,22 @@ export default ForwardRef;
 "#
         );
     }
+
+    #[test]
+    fn with_title_prop_adds_title_and_title_id_prop() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                title_prop: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ({ title , titleId  })=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
 }
