@@ -1,6 +1,8 @@
+use std::{sync::Arc, borrow::Borrow};
 use swc_core::{
     common::DUMMY_SP,
-    ecma::ast::*,
+    common::{SourceMap, FileName},
+    ecma::{ast::*, parser},
 };
 
 use super::core;
@@ -30,6 +32,12 @@ pub enum ExportType {
     Named,
 }
 
+impl Default for ExportType {
+    fn default() -> Self {
+        ExportType::Default
+    }
+}
+
 #[derive(Default)]
 pub struct Options {
     pub typescript: bool,
@@ -40,7 +48,7 @@ pub struct Options {
     // pub template: Option<Box<dyn Template>>,
     pub native: bool,
     pub memo: bool,
-    pub export_type: Option<ExportType>,
+    pub export_type: ExportType,
     pub named_export: Option<String>,
     pub jsx_runtime: Option<JSXRuntime>,
     pub jsx_runtime_import: Option<core::config::JSXRuntimeImport>,
@@ -174,13 +182,73 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         export_identifier = "Memo".to_string();
     }
 
-    exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
-        span: DUMMY_SP,
-        expr: Box::new(Expr::Ident(Ident::new(
-            export_identifier.into(),
-            DUMMY_SP
-        ))),
-    })));
+    let need_named_export = if let Some(_) = &state.caller {
+        true
+    } else {
+        if let ExportType::Named = opts.export_type {
+            true
+        } else {
+            false
+        }
+    };
+    if need_named_export {
+        if let Some(named_export) = opts.named_export {
+            let specifier = ExportSpecifier::Named(ExportNamedSpecifier {
+                span: DUMMY_SP,
+                orig: ModuleExportName::Ident(Ident::new(
+                    export_identifier.clone().into(),
+                    DUMMY_SP
+                )),
+                exported: Some(ModuleExportName::Ident(Ident {
+                    span: DUMMY_SP,
+                    sym: named_export.into(),
+                    optional: false,
+                })),
+                is_type_only: false,
+            });
+            exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(NamedExport {
+                span: DUMMY_SP,
+                specifiers: vec![specifier],
+                src: None,
+                type_only: false,
+                asserts: None,
+            })));
+
+            if let Some(caller) = &state.caller {
+                if let Some(previous_export) = caller.previous_export.clone() {
+                    let cm = Arc::<SourceMap>::default();
+                    let fm = cm.new_source_file(FileName::Anon, previous_export);
+            
+                    let mut recovered_errors = vec![];
+                    let module = parser::parse_file_as_module(
+                        fm.borrow(),
+                        parser::Syntax::Es(parser::EsConfig {
+                            jsx: true,
+                            ..Default::default()
+                        }),
+                        EsVersion::Es2020,
+                        None,
+                        &mut recovered_errors
+                    ).unwrap();
+                    for module_item in module.body {
+                        exports.push(module_item)
+                    }
+                }
+            }
+        } else {
+            panic!(r#""named_export" not specified"#);
+        }
+    }
+
+    if !need_named_export {
+        exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
+            span: DUMMY_SP,
+            expr: Box::new(Expr::Ident(Ident::new(
+                export_identifier.clone().into(),
+                DUMMY_SP
+            ))),
+        })));
+    }
 
     TemplateVariables {
         component_name: state.component_name.clone(),

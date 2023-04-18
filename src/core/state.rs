@@ -2,6 +2,7 @@ use std::path::Path;
 use regex::Regex;
 
 #[napi(object)]
+#[derive(Default)]
 pub struct Caller {
     pub name: Option<String>,
     pub previous_export: Option<String>,
@@ -18,6 +19,7 @@ pub struct Config {
 pub struct InternalConfig {
     pub file_path: Option<String>,
     pub component_name: String,
+    pub caller: Option<Caller>,
 }
 
 impl Default for InternalConfig {
@@ -25,6 +27,7 @@ impl Default for InternalConfig {
         InternalConfig {
             file_path: None,
             component_name: "SvgComponent".to_string(),
+            caller: None,
         }
     }
 }
@@ -80,12 +83,14 @@ pub fn expand_state(state: Option<&Config>) -> InternalConfig {
                             Some(path) => get_component_name(&path)
                         }
                     }
-                }
+                },
+                ..Default::default()
             }
         },
         None => InternalConfig {
             file_path: None,
             component_name: "SvgComponent".to_string(),
+            ..Default::default()
         }
     }
 }
