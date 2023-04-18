@@ -217,4 +217,23 @@ export default SvgComponent;
 "#
         );
     }
+
+    #[test]
+    fn with_title_prop_and_expand_props_adds_title_title_id_props_and_expands_props() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                title_prop: Some(true),
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ({ title , titleId , ...props })=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
 }
