@@ -8,10 +8,18 @@ use crate::core;
 mod variables;
 
 fn get_variables_options(config: &core::config::Config) -> variables::Options {
+    let expand_props = match config.expand_props {
+        Some(core::config::ExpandProps::Bool(b)) => Some(variables::ExpandProps::Bool(b)),
+        Some(core::config::ExpandProps::Start) => Some(variables::ExpandProps::Start),
+        Some(core::config::ExpandProps::End) => Some(variables::ExpandProps::End),
+        None => None,
+    };
+
     let mut opts = variables::Options {
         typescript: config.typescript.unwrap_or(false),
         title_prop: config.title_prop.unwrap_or(false),
         desc_prop: config.desc_prop.unwrap_or(false),
+        expand_props,
         _ref: config._ref.unwrap_or(false),
         native: config.native.unwrap_or(false),
         memo: config.memo.unwrap_or(false),
@@ -232,6 +240,43 @@ export default SvgComponent;
             },
             r#"import * as React from "react";
 const SvgComponent = ({ title , titleId , ...props })=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn with_desc_prop_adds_desc_and_desc_id_prop() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                desc_prop: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ({ desc , descId  })=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn with_desc_prop_and_expand_props_adds_desc_desc_id_props_and_expands_prop() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                desc_prop: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ({ desc , descId , ...props })=><svg><g/></svg>;
 export default SvgComponent;
 "#
         );

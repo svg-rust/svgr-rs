@@ -54,7 +54,6 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
     let mut exports = vec![];
 
     let import_source = opts.import_source.unwrap_or("react".to_string());
-    let expand_props = opts.expand_props.unwrap_or(ExpandProps::Bool(false));
 
     let mut export_identifier = state.component_name.clone();
 
@@ -114,7 +113,12 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         }));
     }
 
-    if let ExpandProps::Bool(false) = expand_props {
+    let need_expand_props = match opts.expand_props {
+        None => false,
+        Some(ExpandProps::Bool(expand_props)) => expand_props,
+        _ => true
+    };
+    if need_expand_props {
         let existing = if props.len() > 0 {
             if let Pat::Object(ref mut object_pat) = props[0] {
                 let identifier = Pat::Ident(BindingIdent::from(Ident::new(
