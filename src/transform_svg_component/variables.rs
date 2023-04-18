@@ -79,6 +79,18 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         }
     }
 
+    if opts.native {
+        let specifier = ImportSpecifier::Default(ImportDefaultSpecifier {
+            span: DUMMY_SP,
+            local: Ident {
+                span: DUMMY_SP,
+                sym: "Svg".into(),
+                optional: false,
+            },
+        });
+        get_or_create_import(&mut imports, "react-native-svg", specifier);
+    }
+
     if opts._ref {
         if props.len() == 0 {
             props.push(Pat::Ident(BindingIdent::from(Ident::new(
