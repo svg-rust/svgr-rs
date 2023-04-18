@@ -281,4 +281,173 @@ export default SvgComponent;
 "#
         );
     }
+
+    #[test]
+    fn with_title_prop_and_desc_prop_adds_title_title_id_desc_and_desc_id_prop() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                title_prop: Some(true),
+                desc_prop: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ({ title , titleId , desc , descId  })=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn with_title_prop_desc_prop_and_expand_props_adds_title_title_id_desc_desc_id_props_and_expands_props() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                title_prop: Some(true),
+                desc_prop: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ({ title , titleId , desc , descId , ...props })=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn with_expand_props_add_props() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = (props)=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn with_ref_and_expand_props_option_expands_props() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                _ref: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import { forwardRef } from "react";
+const SvgComponent = (props, ref)=><svg><g/></svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
+"#
+        );
+    }
+
+    #[test]
+    fn with_native_ref_option_adds_import_from_react_native_svg_and_adds_forward_ref_component() {
+        test_code(
+            r#"<Svg><g/></Svg>"#,
+            &core::config::Config {
+                native: Some(true),
+                _ref: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import Svg from "react-native-svg";
+import { forwardRef } from "react";
+const SvgComponent = (_, ref)=><Svg><g/></Svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
+"#
+        );
+    }
+
+    #[test]
+    fn with_native_and_expand_props_option() {
+        test_code(
+            r#"<Svg><g/></Svg>"#,
+            &core::config::Config {
+                native: Some(true),
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import Svg from "react-native-svg";
+const SvgComponent = (props)=><Svg><g/></Svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn with_native_ref_and_expand_props_option_adds_import_from_react_native_svg_and_adds_props_and_adds_forward_ref_component() {
+        test_code(
+            r#"<Svg><g/></Svg>"#,
+            &core::config::Config {
+                native: Some(true),
+                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                _ref: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import Svg from "react-native-svg";
+import { forwardRef } from "react";
+const SvgComponent = (props, ref)=><Svg><g/></Svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
+"#
+        );
+    }
+
+    #[test]
+    fn with_memo_option_wrap_component_in_react_memo() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                memo: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import { memo } from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+const Memo = memo(SvgComponent);
+export default Memo;
+"#
+        );
+    }
 }

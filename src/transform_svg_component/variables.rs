@@ -161,47 +161,17 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         )));
         props.push(prop);
 
-        let specifier = ImportSpecifier::Named(ImportNamedSpecifier {
-            span: DUMMY_SP,
-            local: Ident {
-                span: DUMMY_SP,
-                sym: "forwardRef".into(),
-                optional: false,
-            },
-            imported: None,
-            is_type_only: false,
-        });
-        get_or_create_import(&mut imports, import_source.as_str(), specifier);
-
-        exports.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
-            span: DUMMY_SP,
-            kind: VarDeclKind::Const,
-            declare: false,
-            decls: vec![VarDeclarator {
-                span: DUMMY_SP,
-                name: Pat::Ident(BindingIdent::from(Ident::new(
-                    "ForwardRef".into(),
-                    DUMMY_SP
-                ))),
-                definite: false,
-                init: Some(Box::new(Expr::Call(CallExpr {
-                    span: DUMMY_SP,
-                    callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
-                        "forwardRef".into(),
-                        DUMMY_SP
-                    )))),
-                    args: vec![ExprOrSpread {
-                        spread: None,
-                        expr: Box::new(Expr::Ident(Ident::new(
-                            export_identifier.into(),
-                            DUMMY_SP
-                        ))),
-                    }],
-                    type_args: None,
-                }))),
-            }],
-        })))));
+        get_or_create_named_import(&mut imports, import_source.as_str(), "forwardRef");
+        let hoc = create_var_decl_init_hoc("ForwardRef", "forwardRef", export_identifier.as_str());
+        exports.push(hoc);
         export_identifier = "ForwardRef".to_string();
+    }
+
+    if opts.memo {
+        get_or_create_named_import(&mut imports, import_source.as_str(), "memo");
+        let hoc = create_var_decl_init_hoc("Memo", "memo", export_identifier.as_str());
+        exports.push(hoc);
+        export_identifier = "Memo".to_string();
     }
 
     exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
@@ -320,6 +290,51 @@ fn get_or_create_import(imports: &mut Vec<ModuleItem>, soruce_value: &str, speci
         asserts: None,
     }));
     imports.push(module_item);
+}
+
+fn get_or_create_named_import(imports: &mut Vec<ModuleItem>, soruce_value: &str, name: &str) {
+    let specifier = ImportSpecifier::Named(ImportNamedSpecifier {
+        span: DUMMY_SP,
+        local: Ident {
+            span: DUMMY_SP,
+            sym: name.into(),
+            optional: false,
+        },
+        imported: None,
+        is_type_only: false,
+    });
+    get_or_create_import(imports, soruce_value, specifier)
+}
+
+fn create_var_decl_init_hoc(var_name: &str, callee: &str, component_name: &str) -> ModuleItem {
+    ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
+        span: DUMMY_SP,
+        kind: VarDeclKind::Const,
+        declare: false,
+        decls: vec![VarDeclarator {
+            span: DUMMY_SP,
+            name: Pat::Ident(BindingIdent::from(Ident::new(
+                var_name.into(),
+                DUMMY_SP
+            ))),
+            definite: false,
+            init: Some(Box::new(Expr::Call(CallExpr {
+                span: DUMMY_SP,
+                callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
+                    callee.into(),
+                    DUMMY_SP
+                )))),
+                args: vec![ExprOrSpread {
+                    spread: None,
+                    expr: Box::new(Expr::Ident(Ident::new(
+                        component_name.into(),
+                        DUMMY_SP
+                    ))),
+                }],
+                type_args: None,
+            }))),
+        }],
+    }))))
 }
 
 fn create_property(key: &str) -> ObjectPatProp {
