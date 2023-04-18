@@ -103,12 +103,10 @@ mod tests {
     use std::{sync::Arc, borrow::Borrow};
     use swc_core::{
         common::{SourceMap, FileName},
-        ecma::codegen::{text_writer::JsWriter, Emitter},
+        ecma::{parser, codegen::{text_writer::JsWriter, Emitter}},
     };
-    use swc_xml::parser::{parse_file_as_document, parser};
 
     use crate::core;
-    use crate::hast_to_swc_ast;
 
     use super::*;
 
@@ -116,18 +114,21 @@ mod tests {
         let cm = Arc::<SourceMap>::default();
         let fm = cm.new_source_file(FileName::Anon, input.to_string());
 
-        let mut errors = vec![];
-        let doc = parse_file_as_document(
+        let mut recovered_errors = vec![];
+        let expr = parser::parse_file_as_expr(
             fm.borrow(),
-            parser::ParserConfig {
+            parser::Syntax::Es(parser::EsConfig {
+                jsx: true,
                 ..Default::default()
-            },
-            &mut errors
+            }),
+            EsVersion::Es2020,
+            None,
+            &mut recovered_errors
         ).unwrap();
 
-        let jsx_element = hast_to_swc_ast::to_swc_ast(doc).unwrap();
+        let jsx_element = expr.as_jsx_element().unwrap();
 
-        let m = transform(jsx_element, config, state);
+        let m = transform(*jsx_element.clone(), config, state);
 
         let mut buf = vec![];
         let mut emitter = Emitter {
@@ -156,7 +157,26 @@ mod tests {
 const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
 "#
-        )
+        );
+    }
+
+    #[test]
+    fn with_native_option_adds_import_from_react_native_svg() {
+        test_code(
+            r#"<Svg><g/></Svg>"#,
+            &core::config::Config {
+                native: Some(true),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+import Svg from "react-native-svg";
+const SvgComponent = ()=><Svg><g/></Svg>;
+export default SvgComponent;
+"#
+        );
     }
     
     #[test]
@@ -177,6 +197,6 @@ const SvgComponent = (_, ref)=><svg><g/></svg>;
 const ForwardRef = forwardRef(SvgComponent);
 export default ForwardRef;
 "#
-        )
+        );
     }
 }
