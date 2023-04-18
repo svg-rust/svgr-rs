@@ -15,10 +15,18 @@ pub struct Config {
     pub caller: Option<Caller>,
 }
 
-#[derive(Default)]
 pub struct InternalConfig {
     pub file_path: Option<String>,
     pub component_name: String,
+}
+
+impl Default for InternalConfig {
+    fn default() -> Self {
+        InternalConfig {
+            file_path: None,
+            component_name: "SvgComponent".to_string(),
+        }
+    }
 }
 
 fn uppercase_first_letter(s: &str) -> String {

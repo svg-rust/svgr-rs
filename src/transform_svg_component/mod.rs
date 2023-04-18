@@ -141,6 +141,23 @@ mod tests {
 
         assert_eq!(result, expected);
     }
+
+    #[test]
+    fn transforms_whole_program() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        )
+    }
     
     #[test]
     fn with_ref_option_adds_forward_ref_component() {
