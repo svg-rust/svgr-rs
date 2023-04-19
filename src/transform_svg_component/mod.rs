@@ -15,6 +15,11 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
         None => None,
     };
 
+    let export_type = match config.export_type {
+        Some(core::config::ExportType::Named) => variables::ExportType::Named,
+        _ => variables::ExportType::Default,
+    };
+
     let mut opts = variables::Options {
         typescript: config.typescript.unwrap_or(false),
         title_prop: config.title_prop.unwrap_or(false),
@@ -24,6 +29,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
         native: config.native.unwrap_or(false),
         memo: config.memo.unwrap_or(false),
         named_export: config.named_export.clone(),
+        export_type,
         ..Default::default()
     };
     
@@ -497,6 +503,26 @@ export { SvgComponent as Component };
 var img = new Image();
 img.src = '...';
 export default img;
+"#
+        );
+    }
+
+    #[test]
+    fn with_named_export_and_export_type_option_and_without_previous_export_state_exports_via_named_export() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                named_export: Some("ReactComponent".to_string()),
+                export_type: Some(core::config::ExportType::Named),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                component_name: "SvgComponent".to_string(),
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export { SvgComponent as ReactComponent };
 "#
         );
     }
