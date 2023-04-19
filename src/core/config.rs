@@ -44,6 +44,13 @@ pub struct JSXRuntimeImport {
     pub specifiers: Option<Vec<String>>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ExportType {
+    Named,
+    Default,
+}
+
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
@@ -83,4 +90,7 @@ pub struct Config {
 
     #[serde(default)]
     pub named_export: Option<String>,
+
+    #[serde(default)]
+    pub export_type: Option<ExportType>,
 }
