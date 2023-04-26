@@ -21,6 +21,12 @@ pub enum JSXRuntime {
     Classic
 }
 
+impl Default for JSXRuntime {
+    fn default() -> Self {
+        JSXRuntime::Classic
+    }
+}
+
 pub enum ExpandProps {
     Bool(bool),
     Start,
@@ -50,7 +56,7 @@ pub struct Options {
     pub memo: bool,
     pub export_type: ExportType,
     pub named_export: Option<String>,
-    pub jsx_runtime: Option<JSXRuntime>,
+    pub jsx_runtime: JSXRuntime,
     pub jsx_runtime_import: Option<core::config::JSXRuntimeImport>,
     pub import_source: Option<String>,
 }
@@ -65,25 +71,23 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
 
     let mut export_identifier = state.component_name.clone();
 
-    if let Some(jsx_runtime) = opts.jsx_runtime {
-        let is_automatic = if let JSXRuntime::Automatic = jsx_runtime {
-            true
-        } else {
-            false
-        };
-        if !is_automatic {
-            match opts.jsx_runtime_import {
-                Some(jsx_runtime_import) => {
-                    imports.push(get_jsx_runtime_import(&jsx_runtime_import));
-                }
-                None => {
-                    let default_jsx_runtime_import = core::config::JSXRuntimeImport {
-                        source: "react".to_string(),
-                        namespace: Some("React".to_string()),
-                        ..Default::default()
-                    };
-                    imports.push(get_jsx_runtime_import(&default_jsx_runtime_import));
-                }
+    let is_automatic = if let JSXRuntime::Automatic = opts.jsx_runtime {
+        true
+    } else {
+        false
+    };
+    if !is_automatic {
+        match opts.jsx_runtime_import {
+            Some(jsx_runtime_import) => {
+                imports.push(get_jsx_runtime_import(&jsx_runtime_import));
+            }
+            None => {
+                let default_jsx_runtime_import = core::config::JSXRuntimeImport {
+                    source: "react".to_string(),
+                    namespace: Some("React".to_string()),
+                    ..Default::default()
+                };
+                imports.push(get_jsx_runtime_import(&default_jsx_runtime_import));
             }
         }
     }

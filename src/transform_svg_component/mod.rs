@@ -43,7 +43,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
 
     match jsx_runtime {
         core::config::JSXRuntime::Classic => {
-            opts.jsx_runtime = Some(variables::JSXRuntime::Classic);
+            opts.jsx_runtime = variables::JSXRuntime::Classic;
             opts.import_source = Some("react".to_string());
             opts.jsx_runtime_import = Some(core::config::JSXRuntimeImport {
                 source: "react".to_string(),
@@ -52,7 +52,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
             });
         }
         core::config::JSXRuntime::ClassicPreact => {
-            opts.jsx_runtime = Some(variables::JSXRuntime::Classic);
+            opts.jsx_runtime = variables::JSXRuntime::Classic;
             opts.import_source = Some("preact".to_string());
             opts.jsx_runtime_import = Some(core::config::JSXRuntimeImport {
                 source: "preact".to_string(),
@@ -61,7 +61,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
             });
         }
         core::config::JSXRuntime::Automatic => {
-            opts.jsx_runtime = Some(variables::JSXRuntime::Automatic);
+            opts.jsx_runtime = variables::JSXRuntime::Automatic;
         }
     }
     
@@ -523,6 +523,66 @@ export default img;
             r#"import * as React from "react";
 const SvgComponent = ()=><svg><g/></svg>;
 export { SvgComponent as ReactComponent };
+"#
+        );
+    }
+
+    // TODO: custom templates
+
+    #[test]
+    fn jsx_runtime_supports_automatic_jsx_runtime() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                jsx_runtime: Some(core::config::JSXRuntime::Automatic),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn jsx_runtime_supports_classic_jsx_runtime() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                jsx_runtime: Some(core::config::JSXRuntime::Classic),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn allows_to_specify_a_custom_classic_jsx_runtime_using_specifiers() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                jsx_runtime: Some(core::config::JSXRuntime::Classic),
+                jsx_runtime_import: Some(core::config::JSXRuntimeImport {
+                    specifiers: Some(vec!["h".to_string()]),
+                    source: "preact".to_string(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import { h } from "preact";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
