@@ -65,7 +65,7 @@ pub struct Config {
     pub desc_prop: Option<bool>,
 
     #[serde(default)]
-    pub expand_props: Option<ExpandProps>,
+    pub expand_props: ExpandProps,
 
     #[serde(default)]
     pub dimensions: Option<bool>,
