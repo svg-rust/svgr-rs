@@ -42,6 +42,33 @@ const jsCode = await transform(
 )
 ```
 
+## Roadmap
+
+- [ ] jsxRuntime
+- [ ] jsxRuntimeImport
+- [ ] icon
+- [ ] native
+- [ ] typescript
+- [ ] dimensions
+- [ ] expandProps
+- [ ] prettier
+- [ ] prettierConfig
+- [ ] svgo
+- [ ] svgoConfig
+- [ ] ref
+- [ ] memo
+- [ ] replaceAttrValues
+- [ ] svgProps
+- [ ] titleProp
+- [ ] descProp
+- [ ] template
+- [ ] outDir
+- [ ] indexTemplate
+- [ ] index
+- [ ] ignoreExisting
+- [ ] filenameCase
+- [ ] ext
+
 # License
 
 [MIT](./LICENSE)
