@@ -2,9 +2,11 @@
 
 <p align="center">SVGR rewritten in Rust 🦀</p>
 
+> ⚠️ RVGR RS is in early development and should not be used in production, expect bugs! 🐛
+
 # Node.js
 
-Use SVGR in Node.js to complex transformations or tools.
+Use SVGR RS in Node.js to complex transformations or tools.
 
 ## Install
 
