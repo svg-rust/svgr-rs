@@ -586,4 +586,70 @@ export default SvgComponent;
 "#
         );
     }
+
+    #[test]
+    fn allows_to_specify_a_custom_classic_jsx_runtime_using_namespace() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                jsx_runtime: Some(core::config::JSXRuntime::Classic),
+                jsx_runtime_import: Some(core::config::JSXRuntimeImport {
+                    namespace: Some("Preact".to_string()),
+                    source: "preact".to_string(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import * as Preact from "preact";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    fn allows_to_specify_a_custom_classic_jsx_runtime_using_default_specifier() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                jsx_runtime: Some(core::config::JSXRuntime::Classic),
+                jsx_runtime_import: Some(core::config::JSXRuntimeImport {
+                    default_specifier: Some("h".to_string()),
+                    source: "hyperapp-jsx-pragma".to_string(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#"import h from "hyperapp-jsx-pragma";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#)]
+    fn throws_with_invalid_configuration() {
+        test_code(
+            r#"<svg><g/></svg>"#,
+            &core::config::Config {
+                jsx_runtime: Some(core::config::JSXRuntime::Classic),
+                jsx_runtime_import: Some(core::config::JSXRuntimeImport {
+                    source: "preact".to_string(),
+                    ..Default::default()
+                }),
+                ..Default::default()
+            },
+            &core::state::InternalConfig {
+                ..Default::default()
+            },
+            r#""#
+        );
+    }
 }
