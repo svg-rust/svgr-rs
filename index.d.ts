@@ -51,4 +51,4 @@ export interface State {
   }
 }
 
-export function transform(code: string, config?: Config, state?: State): Promise<string>
+export function transform(code: string, config?: Config, state?: Partial<State>): Promise<string>

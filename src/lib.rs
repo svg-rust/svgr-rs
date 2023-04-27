@@ -48,10 +48,20 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
         None => panic!("This is invalid SVG")
     };
 
-    let m =  transform_svg_component::transform(jsx_element, &config, &state);
+    let m = transform_svg_component::transform(jsx_element, &config, &state);
 
     let m = m.fold_with(&mut as_folder(add_jsx_attribute::Visitor::new(&config)));
-    let m = m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(&config)));
+
+    let icon = match config.icon {
+        Some(core::config::Icon::Bool(b)) => b,
+        _ => true
+    };
+    let dimensions = config.dimensions.unwrap_or(false);
+    let m =  if icon && dimensions {
+        m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(&config)))
+    } else {
+        m
+    };
 
     let mut buf = vec![];
 
