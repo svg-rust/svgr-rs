@@ -9,10 +9,9 @@ mod variables;
 
 fn get_variables_options(config: &core::config::Config) -> variables::Options {
     let expand_props = match config.expand_props {
-        Some(core::config::ExpandProps::Bool(b)) => Some(variables::ExpandProps::Bool(b)),
-        Some(core::config::ExpandProps::Start) => Some(variables::ExpandProps::Start),
-        Some(core::config::ExpandProps::End) => Some(variables::ExpandProps::End),
-        None => None,
+        core::config::ExpandProps::Bool(b) => Some(variables::ExpandProps::Bool(b)),
+        core::config::ExpandProps::Start => Some(variables::ExpandProps::Start),
+        core::config::ExpandProps::End => Some(variables::ExpandProps::End)
     };
 
     let export_type = match config.export_type {
@@ -239,7 +238,7 @@ export default SvgComponent;
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 title_prop: Some(true),
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 ..Default::default()
             },
             &core::state::InternalConfig {
@@ -275,7 +274,7 @@ export default SvgComponent;
         test_code(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 desc_prop: Some(true),
                 ..Default::default()
             },
@@ -313,7 +312,7 @@ export default SvgComponent;
         test_code(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 title_prop: Some(true),
                 desc_prop: Some(true),
                 ..Default::default()
@@ -333,7 +332,7 @@ export default SvgComponent;
         test_code(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 ..Default::default()
             },
             &core::state::InternalConfig {
@@ -352,7 +351,7 @@ export default SvgComponent;
         test_code(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 _ref: Some(true),
                 ..Default::default()
             },
@@ -398,7 +397,7 @@ export default ForwardRef;
             r#"<Svg><g/></Svg>"#,
             &core::config::Config {
                 native: Some(true),
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 ..Default::default()
             },
             &core::state::InternalConfig {
@@ -419,7 +418,7 @@ export default SvgComponent;
             r#"<Svg><g/></Svg>"#,
             &core::config::Config {
                 native: Some(true),
-                expand_props: Some(core::config::ExpandProps::Bool(true)),
+                expand_props: core::config::ExpandProps::Bool(true),
                 _ref: Some(true),
                 ..Default::default()
             },
