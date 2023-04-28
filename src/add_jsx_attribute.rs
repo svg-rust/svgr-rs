@@ -36,18 +36,72 @@ impl Visitor {
     pub fn new(config: &core::config::Config) -> Self {
         let mut attributes = Vec::new();
 
-        match config._ref {
-            Some(r) => {
-                if r {
-                    attributes.push(Attribute {
-                        name: "ref".to_string(),
-                        value: Some(AttributeValue::Str("ref".to_string())),
-                        literal: true,
-                        ..Attribute::default()
-                    });
-                }
-            },
-            None => {}
+        if let Some(svg_props) = config.svg_props.as_ref() {
+            for (k, v) in svg_props {
+                attributes.push(Attribute {
+                    name: k.clone(),
+                    value: Some(AttributeValue::Str(v.clone())),
+                    literal: true,
+                    ..Attribute::default()
+                });
+            }
+        }
+
+        let _ref = match config._ref {
+            Some(r) => r,
+            None => false
+        };
+        if _ref {
+            attributes.push(Attribute {
+                name: "ref".to_string(),
+                value: Some(AttributeValue::Str("ref".to_string())),
+                literal: true,
+                ..Attribute::default()
+            });
+        }
+
+        let title_prop = match config.title_prop {
+            Some(r) => r,
+            None => false
+        };
+        if title_prop {
+            attributes.push(Attribute {
+                name: "aria-labelledby".to_string(),
+                value: Some(AttributeValue::Str("titleId".to_string())),
+                literal: true,
+                ..Attribute::default()
+            });
+        }
+
+        let desc_prop = match config.desc_prop {
+            Some(r) => r,
+            None => false
+        };
+        if desc_prop {
+            attributes.push(Attribute {
+                name: "aria-describedby".to_string(),
+                value: Some(AttributeValue::Str("descId".to_string())),
+                literal: true,
+                ..Attribute::default()
+            });
+        }
+
+        let expand_props = match config.expand_props {
+            core::config::ExpandProps::Bool(b) => b,
+            _ => true
+        };
+        let position = match config.expand_props {
+            core::config::ExpandProps::Start => Some(AttributePosition::Start),
+            core::config::ExpandProps::End => Some(AttributePosition::End),
+            _ => None
+        };
+        if expand_props {
+            attributes.push(Attribute {
+                name: "props".to_string(),
+                spread: true,
+                position,
+                ..Attribute::default()
+            });
         }
 
         Self {
