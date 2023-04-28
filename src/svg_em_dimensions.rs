@@ -9,43 +9,41 @@ use super::core;
 
 const ELEMENTS: [&str; 2] = ["svg", "Svg"];
 
-enum StrOrNum {
+enum Size {
     Str(String),
     Num(f64),
 }
 
 pub struct Visitor {
-    height: Option<StrOrNum>,
-    width: Option<StrOrNum>,
+    height: Option<Size>,
+    width: Option<Size>,
 }
 
 impl Visitor {
     pub fn new(config: &core::config::Config) -> Self {
-        let height: Option<StrOrNum>;
-        let width: Option<StrOrNum>;
+        let height: Option<Size>;
+        let width: Option<Size>;
     
-        match config.icon.clone() {
-            Some(icon) => {
-                match icon {
-                    core::config::Icon::Str(s) => {
-                        height = Some(StrOrNum::Str(s.clone()));
-                        width = Some(StrOrNum::Str(s.clone()));
-                    },
-                    core::config::Icon::Num(n) => {
-                        height = Some(StrOrNum::Num(n));
-                        width = Some(StrOrNum::Num(n));
-                    },
-                    core::config::Icon::Bool(_) => {
-                        // TODO: native
-                        height = None;
-                        width = None;
-                    },
+        let icon = config.icon.clone().unwrap_or(core::config::Icon::Bool(false));
+        match icon {
+            core::config::Icon::Str(s) => {
+                height = Some(Size::Str(s.clone()));
+                width = Some(Size::Str(s.clone()));
+            },
+            core::config::Icon::Num(n) => {
+                height = Some(Size::Num(n));
+                width = Some(Size::Num(n));
+            },
+            core::config::Icon::Bool(_) => {
+                let native = config.native.unwrap_or(false);
+                if native {
+                    height = Some(Size::Num(24.0));
+                    width = Some(Size::Num(24.0));
+                } else {
+                    height = None;
+                    width = None;
                 }
             },
-            None => {
-                height = None;
-                width = None;
-            }
         }
 
         Self {
@@ -105,7 +103,7 @@ impl VisitMut for Visitor {
     }
 }
 
-fn get_value(raw: Option<&StrOrNum>) -> JSXAttrValue {
+fn get_value(raw: Option<&Size>) -> JSXAttrValue {
     match raw {
         None => {
             JSXAttrValue::Lit(Lit::Str(Str {
@@ -116,14 +114,14 @@ fn get_value(raw: Option<&StrOrNum>) -> JSXAttrValue {
         },
         Some(str_or_num) => {
             match str_or_num {
-                StrOrNum::Str(str) => {
+                Size::Str(str) => {
                     JSXAttrValue::Lit(Lit::Str(Str {
                         span: DUMMY_SP,
                         value: str.clone().into(),
                         raw: None,
                     }))
                 },
-                StrOrNum::Num(num) => {
+                Size::Num(num) => {
                     JSXAttrValue::JSXExprContainer(JSXExprContainer {
                         expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Num(Number {
                             span: DUMMY_SP,
@@ -154,8 +152,8 @@ mod tests {
     use super::*;
 
     struct Options {
-        height: Option<StrOrNum>,
-        width: Option<StrOrNum>,
+        height: Option<Size>,
+        width: Option<Size>,
     }
 
     fn code_test(input: &str, opts: Options, expected: &str) {
@@ -225,8 +223,8 @@ mod tests {
         code_test(
             r#"<svg foo="bar"/>;"#,
             Options {
-                height: Some(StrOrNum::Num(24.0)),
-                width: Some(StrOrNum::Num(24.0)),
+                height: Some(Size::Num(24.0)),
+                width: Some(Size::Num(24.0)),
             },
             r#"<svg foo="bar" width={24} height={24}/>;"#,
         );
@@ -237,8 +235,8 @@ mod tests {
         code_test(
             r#"<svg foo="bar"/>;"#,
             Options {
-                height: Some(StrOrNum::Str("2em".to_string())),
-                width: Some(StrOrNum::Str("2em".to_string())),
+                height: Some(Size::Str("2em".to_string())),
+                width: Some(Size::Str("2em".to_string())),
             },
             r#"<svg foo="bar" width="2em" height="2em"/>;"#,
         );

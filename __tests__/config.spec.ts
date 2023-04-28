@@ -2,7 +2,7 @@ import test from 'ava'
 import { transform, Config, State } from '..'
 
 const svgBaseCode = `
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88">
+<svg width="88px" height="88px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88">
 	<g fill="none" fill-rule="evenodd" stroke="#063855" stroke-linecap="square" stroke-width="2">
 		<path d="M51 37 37 51M51 51 37 37"/>
 	</g>
@@ -11,7 +11,7 @@ const svgBaseCode = `
 
 const configs: (Config & { state?: Partial<State> })[] = [
 	{ dimensions: false },
-	// { expandProps: false },
+	{ expandProps: false },
 	// { expandProps: 'start' },
 	// { icon: true },
 	// { icon: 24 },
