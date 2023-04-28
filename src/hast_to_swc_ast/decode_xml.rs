@@ -54,7 +54,7 @@ pub fn decode_xml(s: &str) -> String {
         // &gt;
         // &lt;
         if bytes.len() - cur_idx > 4 {
-            match s[cur_idx..cur_idx + 4].as_ref() {
+            match &s[cur_idx..cur_idx + 4] {
                 "gt;" => {
                     ret.push('>');
                     cur_idx += 3;
@@ -97,7 +97,7 @@ pub fn decode_xml(s: &str) -> String {
         }
     }
 
-    ret + s[last_idx..].as_ref()
+    ret + &s[last_idx..]
 }
 
 #[cfg(test)]

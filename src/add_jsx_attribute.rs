@@ -36,14 +36,10 @@ impl Visitor {
     pub fn new(config: &core::config::Config) -> Self {
         let mut attributes = Vec::new();
 
-        if let Some(svg_props) = config.svg_props.as_ref() {
+        if let Some(svg_props) = &config.svg_props {
             for (k, v) in svg_props {
-                attributes.push(Attribute {
-                    name: k.clone(),
-                    value: Some(AttributeValue::Str(v.clone())),
-                    literal: true,
-                    ..Default::default()
-                });
+                let attr = svg_prop_to_attr(k, v);
+                attributes.push(attr);
             }
         }
 
@@ -113,7 +109,7 @@ impl Visitor {
 
 impl VisitMut for Visitor {
     fn visit_mut_jsx_opening_element(&mut self, n: &mut JSXOpeningElement) {
-        if let JSXElementName::Ident(ident) = n.name.clone() {
+        if let JSXElementName::Ident(ident) = &n.name {
             if !self.elements.contains(&ident.sym.to_string()) {
                 return;
             }
@@ -137,7 +133,7 @@ impl VisitMut for Visitor {
 
             let new_attr = get_attr(*spread, &name, value.as_ref(), *literal);
 
-            let is_equal_attr = |attr: JSXAttrOrSpread| -> bool {
+            let is_equal_attr = |attr: &JSXAttrOrSpread| -> bool {
                 if *spread {
                     if let JSXAttrOrSpread::SpreadElement(spread) = attr {
                         if let Expr::Ident(ident) = spread.expr.as_ref() {
@@ -147,7 +143,7 @@ impl VisitMut for Visitor {
                     false
                 } else {
                     if let JSXAttrOrSpread::JSXAttr(attr) = attr {
-                        if let JSXAttrName::Ident(ident) = attr.name.clone() {
+                        if let JSXAttrName::Ident(ident) = &attr.name {
                             return ident.sym.to_string() == *name
                         }
                     }
@@ -156,7 +152,7 @@ impl VisitMut for Visitor {
             };
         
             let replaced = n.attrs.clone().iter().enumerate().any(|(index, attr)| {
-                if !is_equal_attr(attr.clone()) {
+                if !is_equal_attr(attr) {
                     return false
                 }
                 n.attrs[index] = new_attr.clone();
@@ -245,6 +241,21 @@ fn get_attr_value(literal: bool, attr_value: Option<&AttributeValue>) -> Option<
             }
         },
         None => None,
+    }
+}
+
+fn svg_prop_to_attr(key: &str, value: &str) -> Attribute {
+    let literal = value.starts_with('{') && value.ends_with('}');
+    let str = if literal {
+        &value[1..value.len() - 1]
+    } else {
+        value
+    };
+    Attribute {
+        name: key.to_string(),
+        value: Some(AttributeValue::Str(str.to_string())),
+        literal,
+        ..Default::default()
     }
 }
 
