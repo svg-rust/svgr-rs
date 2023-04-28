@@ -20,9 +20,10 @@ use napi::bindgen_prelude::*;
 mod hast_to_swc_ast;
 mod core;
 
+mod transform_svg_component;
 mod add_jsx_attribute;
 mod svg_em_dimensions;
-mod transform_svg_component;
+mod remove_jsx_attribute;
 
 #[napi]
 pub async fn transform(code: String, config: Buffer, state: Option<core::state::Config>) -> Result<String> {
@@ -50,13 +51,14 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
 
     let m = transform_svg_component::transform(jsx_element, &config, &state);
 
+    let m = m.fold_with(&mut as_folder(remove_jsx_attribute::Visitor::new(&config)));
     let m = m.fold_with(&mut as_folder(add_jsx_attribute::Visitor::new(&config)));
 
     let icon = match config.icon {
         Some(core::config::Icon::Bool(b)) => b,
-        _ => true
+        _ => false
     };
-    let dimensions = config.dimensions.unwrap_or(false);
+    let dimensions = config.dimensions.unwrap_or(true);
     let m =  if icon && dimensions {
         m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(&config)))
     } else {
