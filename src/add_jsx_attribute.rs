@@ -42,7 +42,7 @@ impl Visitor {
                     name: k.clone(),
                     value: Some(AttributeValue::Str(v.clone())),
                     literal: true,
-                    ..Attribute::default()
+                    ..Default::default()
                 });
             }
         }
@@ -56,7 +56,7 @@ impl Visitor {
                 name: "ref".to_string(),
                 value: Some(AttributeValue::Str("ref".to_string())),
                 literal: true,
-                ..Attribute::default()
+                ..Default::default()
             });
         }
 
@@ -69,7 +69,7 @@ impl Visitor {
                 name: "aria-labelledby".to_string(),
                 value: Some(AttributeValue::Str("titleId".to_string())),
                 literal: true,
-                ..Attribute::default()
+                ..Default::default()
             });
         }
 
@@ -82,7 +82,7 @@ impl Visitor {
                 name: "aria-describedby".to_string(),
                 value: Some(AttributeValue::Str("descId".to_string())),
                 literal: true,
-                ..Attribute::default()
+                ..Default::default()
             });
         }
 
@@ -100,7 +100,7 @@ impl Visitor {
                 name: "props".to_string(),
                 spread: true,
                 position,
-                ..Attribute::default()
+                ..Default::default()
             });
         }
 
@@ -315,7 +315,7 @@ mod tests {
                 attributes: vec![
                     Attribute {
                         name: "disabled".to_string(),
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -333,7 +333,7 @@ mod tests {
                     Attribute {
                         name: "disabled".to_string(),
                         value: Some(AttributeValue::Bool(true)),
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -348,7 +348,7 @@ mod tests {
                     Attribute {
                         name: "disabled".to_string(),
                         value: Some(AttributeValue::Str("true".to_string())),
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -363,7 +363,7 @@ mod tests {
                     Attribute {
                         name: "disabled".to_string(),
                         value: Some(AttributeValue::Num(200.0)),
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -382,7 +382,7 @@ mod tests {
                         name: "ref".to_string(),
                         value: Some(AttributeValue::Str("ref".to_string())),
                         literal: true,
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -398,7 +398,7 @@ mod tests {
                         name: "ref".to_string(),
                         value: Some(AttributeValue::Str("ref ? ref : null".to_string())),
                         literal: true,
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -417,7 +417,7 @@ mod tests {
                         name: "props".to_string(),
                         position: Some(AttributePosition::Start),
                         spread: true,
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -433,7 +433,7 @@ mod tests {
                         name: "props".to_string(),
                         position: Some(AttributePosition::End),
                         spread: true,
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
@@ -451,7 +451,7 @@ mod tests {
                     Attribute {
                         name: "disabled".to_string(),
                         value: Some(AttributeValue::Bool(false)),
-                        ..Attribute::default()
+                        ..Default::default()
                     }
                 ],
             },
