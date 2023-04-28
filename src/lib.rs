@@ -56,7 +56,8 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
 
     let icon = match config.icon {
         Some(core::config::Icon::Bool(b)) => b,
-        _ => false
+        None => false,
+        _ => true
     };
     let dimensions = config.dimensions.unwrap_or(true);
     let m =  if icon && dimensions {
