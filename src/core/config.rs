@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use linked_hash_map::LinkedHashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -121,7 +121,9 @@ pub struct Config {
     pub native: Option<bool>,
 
     #[serde(default)]
-    pub svg_props: Option<HashMap<String, String>>,
+    // Deserialize object/map while maintaining order
+    // here: https://github.com/serde-rs/serde/issues/269
+    pub svg_props: Option<LinkedHashMap<String, String>>,
 
     #[serde(default)]
     pub typescript: Option<bool>,
