@@ -12,7 +12,7 @@ const svgBaseCode = `
 const configs: (Config & { state?: Partial<State> })[] = [
 	{ dimensions: false },
 	{ expandProps: false },
-	// { expandProps: 'start' },
+	{ expandProps: 'start' },
 	// { icon: true },
 	// { icon: 24 },
 	// { icon: '2em' },
