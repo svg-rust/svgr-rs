@@ -28,6 +28,7 @@ swc_core = { version = "0.74.2", features = [
   "base_node",
   "__parser",
 ] }
+linked-hash-map = { version = "0.5.6", features = ["serde_impl"] }
 
 [build-dependencies]
 napi-build = "2.0.1"
