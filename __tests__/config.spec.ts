@@ -32,7 +32,7 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	// },
 	// { titleProp: true },
 	// { descProp: true },
-	// { memo: true },
+	{ memo: true },
 	// {
 	// 	namedExport: 'Component',
 	// 	state: { caller: { previousExport: 'export default "logo.svg";' } },

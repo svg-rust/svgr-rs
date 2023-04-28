@@ -46,19 +46,19 @@ const jsCode = await transform(
 
 - [ ] jsxRuntime
 - [ ] jsxRuntimeImport
-- [ ] icon
+- [x] icon
 - [ ] native
 - [ ] typescript
-- [ ] dimensions
-- [ ] expandProps
+- [x] dimensions
+- [x] expandProps
 - [ ] prettier
 - [ ] prettierConfig
 - [ ] svgo
 - [ ] svgoConfig
-- [ ] ref
-- [ ] memo
+- [x] ref
+- [x] memo
 - [ ] replaceAttrValues
-- [ ] svgProps
+- [x] svgProps
 - [ ] titleProp
 - [ ] descProp
 - [ ] template
