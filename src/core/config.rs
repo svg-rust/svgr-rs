@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
@@ -75,6 +76,9 @@ pub struct Config {
 
     #[serde(default)]
     pub native: Option<bool>,
+
+    #[serde(default)]
+    pub svg_props: Option<HashMap<String, String>>,
 
     #[serde(default)]
     pub typescript: Option<bool>,
