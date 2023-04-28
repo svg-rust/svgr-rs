@@ -70,7 +70,7 @@ impl VisitMut for Visitor {
 
         n.attrs.iter_mut().for_each(|attr| {
             if let JSXAttrOrSpread::JSXAttr(jsx_attr) = attr {
-                if let JSXAttrName::Ident(ident) = jsx_attr.name.clone() {
+                if let JSXAttrName::Ident(ident) = &jsx_attr.name {
                     required_attrs.clone().iter().enumerate().for_each(|(index, attr)| {
                         if ident.sym.to_string() == *attr {
                             match *attr {
