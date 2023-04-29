@@ -61,8 +61,15 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
         _ => true
     };
     let dimensions = config.dimensions.unwrap_or(true);
-    let m =  if icon && dimensions {
+    let m = if icon && dimensions {
         m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(&config)))
+    } else {
+        m
+    };
+
+    let native = config.native.unwrap_or(false);
+    let m = if native {
+        m.fold_with(&mut as_folder(transform_react_native_svg::Visitor::new()))
     } else {
         m
     };
