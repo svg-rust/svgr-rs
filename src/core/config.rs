@@ -24,7 +24,8 @@ macro_rules! named_unit_variant {
             where
                 S: serde::Serializer,
             {
-                serializer.serialize_str(stringify!($variant))
+                let s = stringify!($variant).replace("_", "-");
+                serializer.serialize_str(s.as_str())
             }
 
             pub fn deserialize<'de, D>(deserializer: D) -> Result<(), D::Error>
@@ -35,10 +36,15 @@ macro_rules! named_unit_variant {
                 impl<'de> serde::de::Visitor<'de> for V {
                     type Value = ();
                     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                        f.write_str(concat!("\"", stringify!($variant), "\""))
+                        let mut s = String::new();
+                        s.push_str("\"");
+                        s.push_str(stringify!($variant).replace("_", "-").as_str());
+                        s.push_str("\"");
+                        f.write_str(s.as_str())
                     }
                     fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
-                        if value == stringify!($variant) {
+                        let s = stringify!($variant).replace("_", "-");
+                        if value == s {
                             Ok(())
                         } else {
                             Err(E::invalid_value(serde::de::Unexpected::Str(value), &self))
@@ -54,6 +60,9 @@ macro_rules! named_unit_variant {
 mod strings {
     named_unit_variant!(start);
     named_unit_variant!(end);
+    named_unit_variant!(classic);
+    named_unit_variant!(classic_preact);
+    named_unit_variant!(automatic);
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,8 +84,11 @@ impl Default for ExpandProps {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(untagged)]
 pub enum JSXRuntime {
+    #[serde(with = "strings::classic")]
     Classic,
+    #[serde(with = "strings::classic_preact")]
     ClassicPreact,
+    #[serde(with = "strings::automatic")]
     Automatic,
 }
 
