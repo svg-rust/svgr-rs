@@ -5,6 +5,7 @@ use std::{
 };
 
 use swc_core::{
+    common::DUMMY_SP,
     ecma::{
         ast::*,
         visit::{VisitMut, VisitMutWith}
@@ -32,6 +33,11 @@ impl VisitMut for Visitor {
             self.unsupported_components.clone()
         );
         n.visit_mut_with(&mut svg_element_visitor);
+
+        // TODO: swc currently does not support comments node in ast.
+
+        let mut import_decl_visitor = ImportDeclVisitor::new(self.replaced_components.clone());
+        n.visit_mut_with(&mut import_decl_visitor);
     }
 }
 
@@ -90,7 +96,7 @@ impl JSXElementVisitor {
         if let JSXElementName::Ident(ident) = &mut n.opening.name {
             let element = ident.sym.to_string();
             if let Some(component) = self.element_to_component.get(element.as_str()) {
-                self.replaced_components.borrow_mut().insert(element);
+                self.replaced_components.borrow_mut().insert(component.to_string());
                 ident.sym = component.clone().into();
                 if let Some(closing) = &mut n.closing {
                     if let JSXElementName::Ident(ident) = &mut closing.name {
@@ -152,16 +158,58 @@ fn get_element_to_component() -> HashMap<&'static str, &'static str> {
     ])
 }
 
-// struct ImportDeclarationVisitor {
-//     replaced_components: Rc<RefCell<HashSet<String>>>,
-//     unsupported_components: Rc<RefCell<HashSet<String>>>,
-// }
+struct ImportDeclVisitor {
+    replaced_components: Rc<RefCell<HashSet<String>>>,
+}
 
-// impl VisitMut for ImportDeclarationVisitor {
-//     fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
-//         self.replace_element(n);
-//     }
-// }
+impl ImportDeclVisitor {
+    fn new(replaced_components: Rc<RefCell<HashSet<String>>>) -> Self {
+        ImportDeclVisitor {
+            replaced_components,
+        }
+    }
+}
+
+impl VisitMut for ImportDeclVisitor {
+    fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
+        if n.src.value.to_string() == "react-native-svg" {
+            for component in self.replaced_components.borrow().iter() {
+                if n.specifiers.iter().any(|specifier| {
+                    if let ImportSpecifier::Named(named) = specifier {
+                        if named.local.sym.to_string() == component.to_string() {
+                            return true;
+                        }
+                    }
+                    false
+                }) {
+                    return;
+                }
+
+                n.specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
+                    local: Ident::new(
+                        component.clone().into(),
+                        DUMMY_SP
+                    ),
+                    imported: None,
+                    span: DUMMY_SP,
+                    is_type_only: false,
+                }));
+            }
+        } else if n.src.value.to_string() == "expo" {
+            n.specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
+                local: Ident::new(
+                    "Svg".into(),
+                    DUMMY_SP
+                ),
+                imported: None,
+                span: DUMMY_SP,
+                is_type_only: false,
+            }));
+        } else {
+            return;
+        }
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -224,11 +272,8 @@ mod tests {
     #[test]
     fn should_add_import() {
         code_test(
-            r#"import Svg from 'react-native-svg'; <svg><g /><div /></svg>;"#,
-            r#"
-import Svg, { G } from 'react-native-svg';
-/* SVGR RS has dropped some elements not supported by react-native-svg: div */
-<Svg><G /></Svg>;"#,
+            r#"import Svg from 'react-native-svg'; <svg><g/><div/></svg>;"#,
+            r#"import Svg, { G } from 'react-native-svg';<Svg><G/></Svg>;"#,
         );
     }
 }
