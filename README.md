@@ -47,7 +47,7 @@ const jsCode = await transform(
 - [x] jsxRuntime
 - [x] jsxRuntimeImport
 - [x] icon
-- [ ] native
+- [x] native
 - [ ] typescript
 - [x] dimensions
 - [x] expandProps

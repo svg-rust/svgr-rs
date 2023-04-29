@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashSet, HashMap},
+    collections::HashMap,
     rc::Rc,
     cell::RefCell
 };
@@ -11,17 +11,18 @@ use swc_core::{
         visit::{VisitMut, VisitMutWith}
     },
 };
+use linked_hash_set::LinkedHashSet;
 
 pub struct Visitor {
-    replaced_components: Rc<RefCell<HashSet<String>>>,
-    unsupported_components: Rc<RefCell<HashSet<String>>>,
+    replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+    unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
 }
 
 impl Visitor {
     pub fn new() -> Self {
         Visitor {
-            replaced_components: Rc::new(RefCell::new(HashSet::new())),
-            unsupported_components: Rc::new(RefCell::new(HashSet::new())),
+            replaced_components: Rc::new(RefCell::new(LinkedHashSet::new())),
+            unsupported_components: Rc::new(RefCell::new(LinkedHashSet::new())),
         }
     }
 }
@@ -42,12 +43,15 @@ impl VisitMut for Visitor {
 }
 
 struct SvgElementVisitor {
-    replaced_components: Rc<RefCell<HashSet<String>>>,
-    unsupported_components: Rc<RefCell<HashSet<String>>>,
+    replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+    unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
 }
 
 impl SvgElementVisitor {
-    fn new(replaced_components: Rc<RefCell<HashSet<String>>>, unsupported_components: Rc<RefCell<HashSet<String>>>) -> Self {
+    fn new(
+        replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+        unsupported_components: Rc<RefCell<LinkedHashSet<String>>>
+    ) -> Self {
         SvgElementVisitor {
             replaced_components,
             unsupported_components,
@@ -79,12 +83,15 @@ impl VisitMut for SvgElementVisitor {
 struct JSXElementVisitor {
     element_to_component: HashMap<&'static str, &'static str>,
 
-    replaced_components: Rc<RefCell<HashSet<String>>>,
-    unsupported_components: Rc<RefCell<HashSet<String>>>,
+    replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+    unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
 }
 
 impl JSXElementVisitor {
-    fn new(replaced_components: Rc<RefCell<HashSet<String>>>, unsupported_components: Rc<RefCell<HashSet<String>>>) -> Self {
+    fn new(
+        replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+        unsupported_components: Rc<RefCell<LinkedHashSet<String>>>
+    ) -> Self {
         JSXElementVisitor {
             element_to_component: get_element_to_component(),
             replaced_components,
@@ -159,11 +166,11 @@ fn get_element_to_component() -> HashMap<&'static str, &'static str> {
 }
 
 struct ImportDeclVisitor {
-    replaced_components: Rc<RefCell<HashSet<String>>>,
+    replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
 }
 
 impl ImportDeclVisitor {
-    fn new(replaced_components: Rc<RefCell<HashSet<String>>>) -> Self {
+    fn new(replaced_components: Rc<RefCell<LinkedHashSet<String>>>) -> Self {
         ImportDeclVisitor {
             replaced_components,
         }
