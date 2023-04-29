@@ -38,6 +38,8 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	// 	state: { caller: { previousExport: 'export default "logo.svg";' } },
 	// },
 	// { exportType: 'named' },
+	{ jsxRuntime: 'automatic' },
+	{ jsxRuntime: 'classic-preact' }
 ]
 
 configs.forEach(async c => {
