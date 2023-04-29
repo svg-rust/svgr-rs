@@ -1,0 +1,234 @@
+use std::{
+    collections::{HashSet, HashMap},
+    rc::Rc,
+    cell::RefCell
+};
+
+use swc_core::{
+    ecma::{
+        ast::*,
+        visit::{VisitMut, VisitMutWith}
+    },
+};
+
+pub struct Visitor {
+    replaced_components: Rc<RefCell<HashSet<String>>>,
+    unsupported_components: Rc<RefCell<HashSet<String>>>,
+}
+
+impl Visitor {
+    pub fn new() -> Self {
+        Visitor {
+            replaced_components: Rc::new(RefCell::new(HashSet::new())),
+            unsupported_components: Rc::new(RefCell::new(HashSet::new())),
+        }
+    }
+}
+
+impl VisitMut for Visitor {
+    fn visit_mut_module(&mut self, n: &mut Module) {
+        let mut svg_element_visitor = SvgElementVisitor::new(
+            self.replaced_components.clone(),
+            self.unsupported_components.clone()
+        );
+        n.visit_mut_with(&mut svg_element_visitor);
+    }
+}
+
+struct SvgElementVisitor {
+    replaced_components: Rc<RefCell<HashSet<String>>>,
+    unsupported_components: Rc<RefCell<HashSet<String>>>,
+}
+
+impl SvgElementVisitor {
+    fn new(replaced_components: Rc<RefCell<HashSet<String>>>, unsupported_components: Rc<RefCell<HashSet<String>>>) -> Self {
+        SvgElementVisitor {
+            replaced_components,
+            unsupported_components,
+        }
+    }
+}
+
+impl VisitMut for SvgElementVisitor {
+    fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
+        if let JSXElementName::Ident(ident) = &mut n.opening.name {
+            if ident.sym.to_string() == "svg" {
+                let mut jsx_element_visitor = JSXElementVisitor::new(
+                    self.replaced_components.clone(),
+                    self.unsupported_components.clone(),
+                );
+                ident.sym = "Svg".into();
+                if let Some(closing) = &mut n.closing {
+                    if let JSXElementName::Ident(ident) = &mut closing.name {
+                        ident.sym = "Svg".into();
+                    }
+                }
+                n.visit_mut_with(&mut jsx_element_visitor);
+                return;
+            }
+        }
+    }
+}
+
+struct JSXElementVisitor {
+    element_to_component: HashMap<&'static str, &'static str>,
+
+    replaced_components: Rc<RefCell<HashSet<String>>>,
+    unsupported_components: Rc<RefCell<HashSet<String>>>,
+}
+
+impl JSXElementVisitor {
+    fn new(replaced_components: Rc<RefCell<HashSet<String>>>, unsupported_components: Rc<RefCell<HashSet<String>>>) -> Self {
+        JSXElementVisitor {
+            element_to_component: get_element_to_component(),
+            replaced_components,
+            unsupported_components,
+        }
+    }
+
+    fn replace_element(&self, n: &mut JSXElement) -> bool {
+        if let JSXElementName::Ident(ident) = &mut n.opening.name {
+            let element = ident.sym.to_string();
+            if let Some(component) = self.element_to_component.get(element.as_str()) {
+                self.replaced_components.borrow_mut().insert(element);
+                ident.sym = component.clone().into();
+                if let Some(closing) = &mut n.closing {
+                    if let JSXElementName::Ident(ident) = &mut closing.name {
+                        ident.sym = component.clone().into();
+                    }
+                }
+            } else {
+                // Remove element if not supported
+                self.unsupported_components.borrow_mut().insert(element);
+                return true;
+            }
+        }
+        false
+    }
+}
+
+impl VisitMut for JSXElementVisitor {
+    fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
+        n.visit_mut_children_with(self);
+
+        let mut i = n.children.len();
+        while i > 0 {
+            i -= 1;
+            if let JSXElementChild::JSXElement(jsx_element) = &mut n.children[i] {
+                let unsupported = self.replace_element(jsx_element);
+                if unsupported {
+                    n.children.remove(i);
+                }
+            }
+        }
+    }
+}
+
+fn get_element_to_component() -> HashMap<&'static str, &'static str> {
+    HashMap::from([
+        ("svg", "Svg"),
+        ("circle", "Circle"),
+        ("clipPath", "ClipPath"),
+        ("ellipse", "Ellipse"),
+        ("g", "G"),
+        ("linearGradient", "LinearGradient"),
+        ("radialGradient", "RadialGradient"),
+        ("line", "Line"),
+        ("path", "Path"),
+        ("pattern", "Pattern"),
+        ("polygon", "Polygon"),
+        ("polyline", "Polyline"),
+        ("rect", "Rect"),
+        ("symbol", "Symbol"),
+        ("text", "Text"),
+        ("textPath", "TextPath"),
+        ("tspan", "TSpan"),
+        ("use", "Use"),
+        ("defs", "Defs"),
+        ("stop", "Stop"),
+        ("mask", "Mask"),
+        ("image", "Image"),
+        ("foreignObject", "ForeignObject"),
+    ])
+}
+
+// struct ImportDeclarationVisitor {
+//     replaced_components: Rc<RefCell<HashSet<String>>>,
+//     unsupported_components: Rc<RefCell<HashSet<String>>>,
+// }
+
+// impl VisitMut for ImportDeclarationVisitor {
+//     fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
+//         self.replace_element(n);
+//     }
+// }
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use swc_core::{
+        common::{SourceMap, FileName},
+        ecma::{
+            ast::*,
+            parser::{lexer::Lexer, Parser, StringInput, Syntax, EsConfig},
+            codegen::{text_writer::JsWriter, Emitter, Config},
+            visit::{FoldWith, as_folder}
+        },
+    };
+
+    use super::*;
+
+    fn code_test(input: &str, expected: &str) {
+        let cm = Arc::<SourceMap>::default();
+        let fm = cm.new_source_file(FileName::Anon, input.to_string());
+
+        let lexer = Lexer::new(
+            Syntax::Es(EsConfig {
+                decorators: true,
+                jsx: true,
+                ..Default::default()
+            }),
+            EsVersion::EsNext,
+            StringInput::from(&*fm),
+            None,
+        );
+
+        let mut parser = Parser::new_from(lexer);
+        let module = parser.parse_module().unwrap();
+
+        let module = module.fold_with(&mut as_folder(Visitor::new()));
+
+        let mut buf = vec![];
+        let mut emitter = Emitter {
+            cfg: Config {
+                ..Default::default()
+            },
+            cm: cm.clone(),
+            comments: None,
+            wr: JsWriter::new(cm, "", &mut buf, None),
+        };
+        emitter.emit_module(&module).unwrap();
+        let result = String::from_utf8_lossy(&buf).to_string();
+
+        assert_eq!(result, expected)
+    }
+
+    #[test]
+    fn should_transform_elements() {
+        code_test(
+            r#"<svg><div/></svg>;"#,
+            r#"<Svg></Svg>;"#,
+        );
+    }
+
+    #[test]
+    fn should_add_import() {
+        code_test(
+            r#"import Svg from 'react-native-svg'; <svg><g /><div /></svg>;"#,
+            r#"
+import Svg, { G } from 'react-native-svg';
+/* SVGR RS has dropped some elements not supported by react-native-svg: div */
+<Svg><G /></Svg>;"#,
+        );
+    }
+}

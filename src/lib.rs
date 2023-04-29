@@ -22,8 +22,9 @@ mod core;
 
 mod transform_svg_component;
 mod add_jsx_attribute;
-mod svg_em_dimensions;
 mod remove_jsx_attribute;
+mod svg_em_dimensions;
+mod transform_react_native_svg;
 
 #[napi]
 pub async fn transform(code: String, config: Buffer, state: Option<core::state::Config>) -> Result<String> {
