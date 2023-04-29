@@ -93,6 +93,7 @@ pub enum JSXRuntime {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
 pub struct JSXRuntimeImport {
     pub source: String,
     pub namespace: Option<String>,

@@ -45,7 +45,7 @@ const jsCode = await transform(
 ## Roadmap
 
 - [x] jsxRuntime
-- [ ] jsxRuntimeImport
+- [x] jsxRuntimeImport
 - [x] icon
 - [ ] native
 - [ ] typescript
