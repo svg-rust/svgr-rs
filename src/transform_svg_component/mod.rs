@@ -32,9 +32,9 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
         ..Default::default()
     };
     
-    if let Some(jsx_runtime_import) = config.jsx_runtime_import.clone() {
+    if let Some(jsx_runtime_import) = &config.jsx_runtime_import {
         opts.import_source = Some(jsx_runtime_import.source.clone());
-        opts.jsx_runtime_import = Some(jsx_runtime_import);
+        opts.jsx_runtime_import = Some(jsx_runtime_import.clone());
         return opts;
     }
 

@@ -39,7 +39,8 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	// },
 	// { exportType: 'named' },
 	{ jsxRuntime: 'automatic' },
-	{ jsxRuntime: 'classic-preact' }
+	{ jsxRuntime: 'classic-preact' },
+	{ jsxRuntimeImport: { source: 'hyperapp-jsx-pragma', defaultSpecifier: 'h' } }
 ]
 
 configs.forEach(async c => {
