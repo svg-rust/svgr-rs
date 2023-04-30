@@ -66,5 +66,14 @@
   },
   "bugs": {
     "url": "https://github.com/SyMind/svgr-rs/issues"
-  }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "binding.js",
+    "binding.d.ts",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ]
 }
