@@ -31,7 +31,7 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	// 		tpl`const noop = () => null; export default noop;`,
 	// },
 	{ titleProp: true },
-	// { descProp: true },
+	{ descProp: true },
 	{ memo: true },
 	// {
 	// 	namedExport: 'Component',

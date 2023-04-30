@@ -68,6 +68,20 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
         m
     };
 
+    let title_prop = config.title_prop.unwrap_or(false);
+    let m = if title_prop {
+        m.fold_with(&mut as_folder(svg_dynamic_title::Visitor::new("title".to_string())))
+    } else {
+        m
+    };
+
+    let desc_prop = config.desc_prop.unwrap_or(false);
+    let m = if desc_prop {
+        m.fold_with(&mut as_folder(svg_dynamic_title::Visitor::new("desc".to_string())))
+    } else {
+        m
+    };
+
     let native = config.native.unwrap_or(false);
     let m = if native {
         m.fold_with(&mut as_folder(transform_react_native_svg::Visitor::new()))

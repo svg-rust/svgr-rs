@@ -59,8 +59,8 @@ const jsCode = await transform(
 - [x] memo
 - [ ] replaceAttrValues
 - [x] svgProps
-- [ ] titleProp
-- [ ] descProp
+- [x] titleProp
+- [x] descProp
 - [ ] template
 - [ ] outDir
 - [ ] indexTemplate
