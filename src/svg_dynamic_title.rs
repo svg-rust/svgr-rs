@@ -339,4 +339,64 @@ mod tests {
             r#"<svg>{title ? <title id={titleId}>{title}</title> : null}<foo/></svg>;"#,
         );
     }
+
+    #[test]
+    fn desc_plugin_should_add_desc_attribute_if_not_present() {
+        code_test(
+            r#"<svg></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc ? <desc id={descId}>{desc}</desc> : null}</svg>;"#,
+        );
+    }
+
+    #[test]
+    fn desc_plugin_should_add_desc_element_and_fallback_to_existing_desc() {
+        code_test(
+            r#"<svg><desc>Hello</desc></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc === undefined ? <desc id={descId}>Hello</desc> : desc ? <desc id={descId}>{desc}</desc> : null}</svg>;"#,
+        );
+
+        code_test(
+            r#"<svg><desc>{"Hello"}</desc></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc === undefined ? <desc id={descId}>{"Hello"}</desc> : desc ? <desc id={descId}>{desc}</desc> : null}</svg>;"#,
+        );
+    }
+
+    #[test]
+    fn desc_plugin_should_preserve_any_existing_desc_attributes() {
+        code_test(
+            r#"<svg><desc id="a">Hello</desc></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc === undefined ? <desc id={descId || "a"}>Hello</desc> : desc ? <desc id={descId || "a"}>{desc}</desc> : null}</svg>;"#,
+        );
+    }
+
+    #[test]
+    fn desc_plugin_should_support_empty_desc() {
+        code_test(
+            r#"<svg><desc></desc></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc ? <desc id={descId}>{desc}</desc> : null}</svg>;"#,
+        );
+    }
+
+    #[test]
+    fn desc_plugin_should_support_self_closing_desc() {
+        code_test(
+            r#"<svg><desc/></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc ? <desc id={descId}>{desc}</desc> : null}</svg>;"#,
+        );
+    }
+
+    #[test]
+    fn desc_plugin_should_work_if_an_attribute_is_already_present() {
+        code_test(
+            r#"<svg><foo/></svg>;"#,
+            "desc".to_string(),
+            r#"<svg>{desc ? <desc id={descId}>{desc}</desc> : null}<foo/></svg>;"#,
+        );
+    }
 }
