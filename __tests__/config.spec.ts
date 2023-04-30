@@ -30,7 +30,7 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	// 	template: (_, { tpl }) =>
 	// 		tpl`const noop = () => null; export default noop;`,
 	// },
-	// { titleProp: true },
+	{ titleProp: true },
 	// { descProp: true },
 	{ memo: true },
 	// {

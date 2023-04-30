@@ -23,6 +23,7 @@ mod core;
 mod transform_svg_component;
 mod add_jsx_attribute;
 mod remove_jsx_attribute;
+mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
 
