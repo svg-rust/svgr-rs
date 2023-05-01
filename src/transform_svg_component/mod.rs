@@ -283,7 +283,7 @@ export default SvgComponent;
 
     #[test]
     fn with_title_prop_and_expand_props_adds_title_title_id_props_and_expands_props() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 title_prop: Some(true),
@@ -296,7 +296,16 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = ({ title , titleId , ...props })=><svg><g/></svg>;
 export default SvgComponent;
-"#
+"#,
+            r#"import * as React from "react";
+import { SVGProps } from "react";
+interface SVGRProps {
+    title?: string;
+    titleId?: string;
+}
+const SvgComponent = ({ title , titleId , ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
+export default SvgComponent;
+"#,
         );
     }
 
