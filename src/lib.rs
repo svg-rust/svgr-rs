@@ -23,6 +23,7 @@ mod core;
 mod transform_svg_component;
 mod add_jsx_attribute;
 mod remove_jsx_attribute;
+mod replace_jsx_attribute;
 mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
@@ -64,6 +65,13 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
     let dimensions = config.dimensions.unwrap_or(true);
     let m = if icon && dimensions {
         m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(&config)))
+    } else {
+        m
+    };
+
+    let replace_attr_values = config.replace_attr_values.is_some();
+    let m = if replace_attr_values {
+        m.fold_with(&mut as_folder(replace_jsx_attribute::Visitor::new(&config)))
     } else {
         m
     };

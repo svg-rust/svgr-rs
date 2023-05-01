@@ -66,7 +66,7 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     let value = n.data.to_string();
 
     let space_regex = Regex::new(r"^\s+$").unwrap();
-    if space_regex.is_match(value.as_str()) {
+    if space_regex.is_match(&value) {
         return None;
     }
 
@@ -74,7 +74,7 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
         span: DUMMY_SP,
         expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Str(Str {
             span: DUMMY_SP,
-            value: decode_xml(value.as_str()).into(),
+            value: decode_xml(&value).into(),
             raw: None,
         })))),
     }))

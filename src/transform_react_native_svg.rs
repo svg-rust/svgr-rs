@@ -102,7 +102,7 @@ impl JSXElementVisitor {
     fn replace_element(&self, n: &mut JSXElement) -> bool {
         if let JSXElementName::Ident(ident) = &mut n.opening.name {
             let element = ident.sym.to_string();
-            if let Some(component) = self.element_to_component.get(element.as_str()) {
+            if let Some(component) = self.element_to_component.get(&element.as_str()) {
                 self.replaced_components.borrow_mut().insert(component.to_string());
                 ident.sym = component.clone().into();
                 if let Some(closing) = &mut n.closing {

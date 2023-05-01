@@ -28,7 +28,7 @@ pub fn format_key(key: &str) -> PropName {
 
     let mut key = key.to_lowercase();
     let ms_regex = Regex::new(MS_REGEX).unwrap();
-    if ms_regex.is_match(key.as_str()) {
+    if ms_regex.is_match(&key) {
         key = key[1..].into();
     }
 
