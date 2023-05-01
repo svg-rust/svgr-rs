@@ -22,8 +22,8 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	{ native: true, ref: true },
 	{ ref: true },
 	{ svgProps: { a: 'b', b: '{props.b}' } },
-	// { replaceAttrValues: { none: 'black' } },
-	// { replaceAttrValues: { none: '{black}' } },
+	{ replaceAttrValues: { none: 'black' } },
+	{ replaceAttrValues: { none: '{black}' } },
 	// { svgo: false },
 	// { prettier: false },
 	// {

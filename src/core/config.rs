@@ -25,7 +25,7 @@ macro_rules! named_unit_variant {
                 S: serde::Serializer,
             {
                 let s = stringify!($variant).replace("_", "-");
-                serializer.serialize_str(s.as_str())
+                serializer.serialize_str(&s)
             }
 
             pub fn deserialize<'de, D>(deserializer: D) -> Result<(), D::Error>
@@ -40,7 +40,7 @@ macro_rules! named_unit_variant {
                         s.push_str("\"");
                         s.push_str(stringify!($variant).replace("_", "-").as_str());
                         s.push_str("\"");
-                        f.write_str(s.as_str())
+                        f.write_str(&s)
                     }
                     fn visit_str<E: serde::de::Error>(self, value: &str) -> Result<Self::Value, E> {
                         let s = stringify!($variant).replace("_", "-");
@@ -143,6 +143,9 @@ pub struct Config {
 
     #[serde(default)]
     pub memo: Option<bool>,
+
+    #[serde(default)]
+    pub replace_attr_values: Option<LinkedHashMap<String, String>>,
 
     #[serde(default)]
     pub jsx_runtime: Option<JSXRuntime>,

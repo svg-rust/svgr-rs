@@ -277,15 +277,15 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
 
         props.push(Pat::Ident(prop));
 
-        get_or_create_named_import(&mut imports, import_source.as_str(), "forwardRef");
-        let hoc = create_var_decl_init_hoc("ForwardRef", "forwardRef", export_identifier.as_str());
+        get_or_create_named_import(&mut imports, &import_source, "forwardRef");
+        let hoc = create_var_decl_init_hoc("ForwardRef", "forwardRef", &export_identifier);
         exports.push(hoc);
         export_identifier = "ForwardRef".to_string();
     }
 
     if opts.memo {
-        get_or_create_named_import(&mut imports, import_source.as_str(), "memo");
-        let hoc = create_var_decl_init_hoc("Memo", "memo", export_identifier.as_str());
+        get_or_create_named_import(&mut imports, &import_source, "memo");
+        let hoc = create_var_decl_init_hoc("Memo", "memo", &export_identifier);
         exports.push(hoc);
         export_identifier = "Memo".to_string();
     }

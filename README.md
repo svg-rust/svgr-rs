@@ -57,7 +57,7 @@ const jsCode = await transform(
 - [ ] svgoConfig
 - [x] ref
 - [x] memo
-- [ ] replaceAttrValues
+- [x] replaceAttrValues
 - [x] svgProps
 - [x] titleProp
 - [x] descProp
