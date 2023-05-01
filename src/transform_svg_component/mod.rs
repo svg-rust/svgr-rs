@@ -311,7 +311,7 @@ export default SvgComponent;
 
     #[test]
     fn with_desc_prop_adds_desc_and_desc_id_prop() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 desc_prop: Some(true),
@@ -324,13 +324,21 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = ({ desc , descId  })=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+interface SVGRProps {
+    desc?: string;
+    descId?: string;
+}
+const SvgComponent = ({ desc , descId  }: SVGRProps)=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn with_desc_prop_and_expand_props_adds_desc_desc_id_props_and_expands_prop() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 expand_props: core::config::ExpandProps::Bool(true),
@@ -343,13 +351,22 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = ({ desc , descId , ...props })=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+import { SVGProps } from "react";
+interface SVGRProps {
+    desc?: string;
+    descId?: string;
+}
+const SvgComponent = ({ desc , descId , ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn with_title_prop_and_desc_prop_adds_title_title_id_desc_and_desc_id_prop() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 title_prop: Some(true),
@@ -363,13 +380,23 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = ({ title , titleId , desc , descId  })=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+interface SVGRProps {
+    title?: string;
+    titleId?: string;
+    desc?: string;
+    descId?: string;
+}
+const SvgComponent = ({ title , titleId , desc , descId  }: SVGRProps)=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn with_title_prop_desc_prop_and_expand_props_adds_title_title_id_desc_desc_id_props_and_expands_props() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 expand_props: core::config::ExpandProps::Bool(true),
@@ -383,13 +410,24 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = ({ title , titleId , desc , descId , ...props })=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+import { SVGProps } from "react";
+interface SVGRProps {
+    title?: string;
+    titleId?: string;
+    desc?: string;
+    descId?: string;
+}
+const SvgComponent = ({ title , titleId , desc , descId , ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn with_expand_props_add_props() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 expand_props: core::config::ExpandProps::Bool(true),
@@ -402,13 +440,18 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = (props)=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+import { SVGProps } from "react";
+const SvgComponent = (props: SVGProps<SVGSVGElement>)=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn with_ref_and_expand_props_option_expands_props() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 expand_props: core::config::ExpandProps::Bool(true),
@@ -424,13 +467,19 @@ import { forwardRef } from "react";
 const SvgComponent = (props, ref)=><svg><g/></svg>;
 const ForwardRef = forwardRef(SvgComponent);
 export default ForwardRef;
+"#,
+            r#"import * as React from "react";
+import { SVGProps, Ref, forwardRef } from "react";
+const SvgComponent = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>)=><svg><g/></svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
 "#
         );
     }
 
     #[test]
     fn with_native_ref_option_adds_import_from_react_native_svg_and_adds_forward_ref_component() {
-        test_code(
+        test_js_n_ts(
             r#"<Svg><g/></Svg>"#,
             &core::config::Config {
                 native: Some(true),
@@ -448,13 +497,20 @@ import { forwardRef } from "react";
 const SvgComponent = (_, ref)=><Svg><g/></Svg>;
 const ForwardRef = forwardRef(SvgComponent);
 export default ForwardRef;
+"#,
+            r#"import * as React from "react";
+import Svg from "react-native-svg";
+import { Ref, forwardRef } from "react";
+const SvgComponent = (_, ref: Ref<SVGSVGElement>)=><Svg><g/></Svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
 "#
         );
     }
 
     #[test]
     fn with_native_and_expand_props_option() {
-        test_code(
+        test_js_n_ts(
             r#"<Svg><g/></Svg>"#,
             &core::config::Config {
                 native: Some(true),
@@ -469,13 +525,18 @@ export default ForwardRef;
 import Svg from "react-native-svg";
 const SvgComponent = (props)=><Svg><g/></Svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+import Svg, { SvgProps } from "react-native-svg";
+const SvgComponent = (props: SvgProps)=><Svg><g/></Svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn with_native_ref_and_expand_props_option_adds_import_from_react_native_svg_and_adds_props_and_adds_forward_ref_component() {
-        test_code(
+        test_js_n_ts(
             r#"<Svg><g/></Svg>"#,
             &core::config::Config {
                 native: Some(true),
@@ -493,13 +554,20 @@ import { forwardRef } from "react";
 const SvgComponent = (props, ref)=><Svg><g/></Svg>;
 const ForwardRef = forwardRef(SvgComponent);
 export default ForwardRef;
+"#,
+            r#"import * as React from "react";
+import Svg, { SvgProps } from "react-native-svg";
+import { Ref, forwardRef } from "react";
+const SvgComponent = (props: SvgProps, ref: Ref<SVGSVGElement>)=><Svg><g/></Svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
 "#
         );
     }
 
     #[test]
     fn with_memo_option_wrap_component_in_react_memo() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 memo: Some(true),
@@ -515,13 +583,19 @@ import { memo } from "react";
 const SvgComponent = ()=><svg><g/></svg>;
 const Memo = memo(SvgComponent);
 export default Memo;
+"#,
+            r#"import * as React from "react";
+import { memo } from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+const Memo = memo(SvgComponent);
+export default Memo;
 "#
         );
     }
 
     #[test]
     fn with_both_memo_and_ref_option_wrap_component_in_react_memo_and_react_forward_ref() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 memo: Some(true),
@@ -539,13 +613,20 @@ const SvgComponent = (_, ref)=><svg><g/></svg>;
 const ForwardRef = forwardRef(SvgComponent);
 const Memo = memo(ForwardRef);
 export default Memo;
+"#,
+            r#"import * as React from "react";
+import { Ref, forwardRef, memo } from "react";
+const SvgComponent = (_, ref: Ref<SVGSVGElement>)=><svg><g/></svg>;
+const ForwardRef = forwardRef(SvgComponent);
+const Memo = memo(ForwardRef);
+export default Memo;
 "#
         );
     }
 
     #[test]
     fn with_named_export_option_and_previous_export_state_has_custom_named_export() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 named_export: Some("Component".to_string()),
@@ -566,13 +647,20 @@ export { SvgComponent as Component };
 var img = new Image();
 img.src = '...';
 export default img;
+"#,
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export { SvgComponent as Component };
+var img = new Image();
+img.src = '...';
+export default img;
 "#
         );
     }
 
     #[test]
     fn with_named_export_and_export_type_option_and_without_previous_export_state_exports_via_named_export() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 named_export: Some("ReactComponent".to_string()),
@@ -587,6 +675,10 @@ export default img;
             r#"import * as React from "react";
 const SvgComponent = ()=><svg><g/></svg>;
 export { SvgComponent as ReactComponent };
+"#,
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export { SvgComponent as ReactComponent };
 "#
         );
     }
@@ -595,7 +687,7 @@ export { SvgComponent as ReactComponent };
 
     #[test]
     fn jsx_runtime_supports_automatic_jsx_runtime() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 jsx_runtime: Some(core::config::JSXRuntime::Automatic),
@@ -607,13 +699,16 @@ export { SvgComponent as ReactComponent };
             },
             r#"const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn jsx_runtime_supports_classic_jsx_runtime() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 jsx_runtime: Some(core::config::JSXRuntime::Classic),
@@ -626,13 +721,17 @@ export default SvgComponent;
             r#"import * as React from "react";
 const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn allows_to_specify_a_custom_classic_jsx_runtime_using_specifiers() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 jsx_runtime: Some(core::config::JSXRuntime::Classic),
@@ -650,13 +749,17 @@ export default SvgComponent;
             r#"import { h } from "preact";
 const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import { h } from "preact";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn allows_to_specify_a_custom_classic_jsx_runtime_using_namespace() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 jsx_runtime: Some(core::config::JSXRuntime::Classic),
@@ -674,13 +777,17 @@ export default SvgComponent;
             r#"import * as Preact from "preact";
 const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
+"#,
+            r#"import * as Preact from "preact";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
 "#
         );
     }
 
     #[test]
     fn allows_to_specify_a_custom_classic_jsx_runtime_using_default_specifier() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 jsx_runtime: Some(core::config::JSXRuntime::Classic),
@@ -695,6 +802,10 @@ export default SvgComponent;
             &core::state::InternalConfig {
                 ..Default::default()
             },
+            r#"import h from "hyperapp-jsx-pragma";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#,
             r#"import h from "hyperapp-jsx-pragma";
 const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
