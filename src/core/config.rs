@@ -102,7 +102,7 @@ pub struct JSXRuntimeImport {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(rename_all = "kebab-case")]
 pub enum ExportType {
     Named,
     Default,

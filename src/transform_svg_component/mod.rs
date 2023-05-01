@@ -2,6 +2,7 @@ use swc_core::{
     common::DUMMY_SP,
     ecma::ast::*,
 };
+use napi::bindgen_prelude::*;
 
 use crate::core;
 
@@ -67,10 +68,10 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
     opts
 }
 
-pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: &core::state::InternalConfig) -> Module {
+pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: &core::state::InternalConfig) -> Result<Module> {
     let variables_options = get_variables_options(config);
 
-    let variables = variables::get_variables(variables_options, state, jsx_element);
+    let variables = variables::get_variables(variables_options, state, jsx_element)?;
 
     let mut body = vec![];
 
@@ -109,11 +110,11 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
         body.push(export);
     }
 
-    Module {
+    Ok(Module {
         span: DUMMY_SP,
         body,
         shebang: None,
-    }
+    })
 }
 
 #[cfg(test)]
@@ -146,7 +147,7 @@ mod tests {
 
         let jsx_element = expr.as_jsx_element().unwrap();
 
-        let m = transform(*jsx_element.clone(), config, state);
+        let m = transform(*jsx_element.clone(), config, state).unwrap();
 
         let mut buf = vec![];
         let mut emitter = Emitter {
