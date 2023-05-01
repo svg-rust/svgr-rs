@@ -556,18 +556,6 @@ fn ts_type_reference_svg_props(imports: &mut Vec<ModuleItem>, native: bool, impo
             )),
             type_params: None,
         }));
-
-        // return Box::new(TsTypeAnn {
-        //     span: DUMMY_SP,
-        //     type_ann: Box::new(TsType::TsTypeRef(TsTypeRef {
-        //         span: DUMMY_SP,
-        //         type_name: TsEntityName::Ident(Ident::new(
-        //             "SvgProps".into(),
-        //             DUMMY_SP
-        //         )),
-        //         type_params: None,
-        //     })),
-        // });
     }
 
     get_or_create_named_import(imports, import_source, "SVGProps");
@@ -592,28 +580,4 @@ fn ts_type_reference_svg_props(imports: &mut Vec<ModuleItem>, native: bool, impo
             ],
         })),
     }))
-
-    // return Box::new(TsTypeAnn {
-    //     span: DUMMY_SP,
-    //     type_ann: Box::new(TsType::TsTypeRef(TsTypeRef {
-    //         span: DUMMY_SP,
-    //         type_name: TsEntityName::Ident(Ident::new(
-    //             "SVGProps".into(),
-    //             DUMMY_SP
-    //         )),
-    //         type_params: Some(Box::new(TsTypeParamInstantiation {
-    //             span: DUMMY_SP,
-    //             params: vec![
-    //                 Box::new(TsType::TsTypeRef(TsTypeRef {
-    //                     span: DUMMY_SP,
-    //                     type_name: TsEntityName::Ident(Ident::new(
-    //                         "SVGSVGElement".into(),
-    //                         DUMMY_SP
-    //                     )),
-    //                     type_params: None,
-    //                 }))
-    //             ],
-    //         })),
-    //     })),
-    // });
 }
