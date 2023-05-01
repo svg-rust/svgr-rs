@@ -211,11 +211,40 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
                 DUMMY_SP
             ))));
         }
-        let prop = Pat::Ident(BindingIdent::from(Ident::new(
+        let mut prop = BindingIdent::from(Ident::new(
             "ref".into(),
-            DUMMY_SP
-        )));
-        props.push(prop);
+            DUMMY_SP,
+        ));
+
+        if opts.typescript {
+            get_or_create_named_import(&mut imports, "react", "Ref");
+
+            prop.type_ann = Some(Box::new(TsTypeAnn {
+                span: DUMMY_SP,
+                type_ann: Box::new(TsType::TsTypeRef(TsTypeRef {
+                    span: DUMMY_SP,
+                    type_name: TsEntityName::Ident(Ident::new(
+                        "Ref".into(),
+                        DUMMY_SP
+                    )),
+                    type_params: Some(Box::new(TsTypeParamInstantiation {
+                        span: DUMMY_SP,
+                        params: vec![
+                            Box::new(TsType::TsTypeRef(TsTypeRef {
+                                span: DUMMY_SP,
+                                type_name: TsEntityName::Ident(Ident::new(
+                                    "SVGSVGElement".into(),
+                                    DUMMY_SP
+                                )),
+                                type_params: None,
+                            })),
+                        ],
+                    })),
+                })),
+            }));
+        }
+
+        props.push(Pat::Ident(prop));
 
         get_or_create_named_import(&mut imports, import_source.as_str(), "forwardRef");
         let hoc = create_var_decl_init_hoc("ForwardRef", "forwardRef", export_identifier.as_str());

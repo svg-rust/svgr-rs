@@ -228,7 +228,7 @@ export default SvgComponent;
     
     #[test]
     fn with_ref_option_adds_forward_ref_component() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 _ref: Some(true),
@@ -242,6 +242,12 @@ export default SvgComponent;
             r#"import * as React from "react";
 import { forwardRef } from "react";
 const SvgComponent = (_, ref)=><svg><g/></svg>;
+const ForwardRef = forwardRef(SvgComponent);
+export default ForwardRef;
+"#,
+            r#"import * as React from "react";
+import { Ref, forwardRef } from "react";
+const SvgComponent = (_, ref: Ref<SVGSVGElement>)=><svg><g/></svg>;
 const ForwardRef = forwardRef(SvgComponent);
 export default ForwardRef;
 "#
