@@ -78,6 +78,10 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
         body.push(import);
     }
 
+    for interface in variables.interfaces {
+        body.push(interface);
+    }
+
     body.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
         span: DUMMY_SP,
         kind: VarDeclKind::Const,
@@ -157,9 +161,27 @@ mod tests {
         assert_eq!(result, expected);
     }
 
+    fn test_js_n_ts(input: &str, config: &core::config::Config, state: &core::state::InternalConfig, js: &str, ts: &str) {
+        test_code(
+            input,
+            config,
+            state,
+            js
+        );
+
+        let mut config = config.clone();
+        config.typescript = Some(true);
+        test_code(
+            input,
+            &config,
+            state,
+            ts
+        );
+    }
+
     #[test]
     fn transforms_whole_program() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 expand_props: core::config::ExpandProps::Bool(false),
@@ -171,13 +193,17 @@ mod tests {
             r#"import * as React from "react";
 const SvgComponent = ()=><svg><g/></svg>;
 export default SvgComponent;
-"#
+"#,
+            r#"import * as React from "react";
+const SvgComponent = ()=><svg><g/></svg>;
+export default SvgComponent;
+"#,
         );
     }
 
     #[test]
     fn with_native_option_adds_import_from_react_native_svg() {
-        test_code(
+        test_js_n_ts(
             r#"<Svg><g/></Svg>"#,
             &core::config::Config {
                 native: Some(true),
@@ -187,6 +213,11 @@ export default SvgComponent;
             &core::state::InternalConfig {
                 ..Default::default()
             },
+            r#"import * as React from "react";
+import Svg from "react-native-svg";
+const SvgComponent = ()=><Svg><g/></Svg>;
+export default SvgComponent;
+"#,
             r#"import * as React from "react";
 import Svg from "react-native-svg";
 const SvgComponent = ()=><Svg><g/></Svg>;
@@ -219,7 +250,7 @@ export default ForwardRef;
 
     #[test]
     fn with_title_prop_adds_title_and_title_id_prop() {
-        test_code(
+        test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
                 title_prop: Some(true),
@@ -231,6 +262,14 @@ export default ForwardRef;
             },
             r#"import * as React from "react";
 const SvgComponent = ({ title , titleId  })=><svg><g/></svg>;
+export default SvgComponent;
+"#,
+            r#"import * as React from "react";
+interface SVGRProps {
+    title?: string;
+    titleId?: string;
+}
+const SvgComponent = ({ title , titleId  }: SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#
         );

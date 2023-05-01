@@ -9,7 +9,7 @@ use super::core;
 
 pub struct TemplateVariables {
     pub component_name: String,
-    pub interfaces: Vec<TsInterfaceDecl>,
+    pub interfaces: Vec<ModuleItem>,
     pub props: Vec<Pat>,
     pub imports: Vec<ModuleItem>,
     pub exports: Vec<ModuleItem>,
@@ -106,23 +106,66 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
 
     if opts.title_prop || opts.desc_prop {
         let mut properties = vec![];
+        let mut property_signatures = vec![];
 
         if opts.title_prop {
             properties.push(create_property("title"));
             properties.push(create_property("titleId"));
+
+            if opts.typescript {
+                property_signatures.push(create_signature("title"));
+                property_signatures.push(create_signature("titleId"));
+            }
         }
 
         if opts.desc_prop {
             properties.push(create_property("desc"));
             properties.push(create_property("descId"));
+
+            if opts.typescript {
+                property_signatures.push(create_signature("desc"));
+                property_signatures.push(create_signature("descId"));
+            }
         }
 
-        props.push(Pat::Object(ObjectPat {
+        let mut prop = ObjectPat {
             span: DUMMY_SP,
             props: properties,
             optional: false,
             type_ann: None,
-        }));
+        };
+
+        if opts.typescript {
+            let interface = ModuleItem::Stmt(Stmt::Decl(Decl::TsInterface(Box::new(TsInterfaceDecl {
+                id: Ident::new(
+                    "SVGRProps".into(),
+                    DUMMY_SP
+                ),
+                span: DUMMY_SP,
+                declare: false,
+                type_params: None,
+                extends: vec![],
+                body: TsInterfaceBody {
+                    span: DUMMY_SP,
+                    body: property_signatures,
+                },
+            }))));
+            interfaces.push(interface);
+
+            prop.type_ann = Some(Box::new(TsTypeAnn {
+                span: DUMMY_SP,
+                type_ann: Box::new(TsType::TsTypeRef(TsTypeRef {
+                    span: DUMMY_SP,
+                    type_name: TsEntityName::Ident(Ident::new(
+                        "SVGRProps".into(),
+                        DUMMY_SP
+                    )),
+                    type_params: None,
+                })),
+            }));
+        }
+
+        props.push(Pat::Object(prop));
     }
 
     let need_expand_props = match opts.expand_props {
@@ -153,10 +196,11 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         };
         
         if !existing {
-            props.push(Pat::Ident(BindingIdent::from(Ident::new(
+            let prop = Pat::Ident(BindingIdent::from(Ident::new(
                 "props".into(),
                 DUMMY_SP
-            ))));
+            )));
+            props.push(prop);
         }
     }
 
@@ -414,5 +458,28 @@ fn create_property(key: &str) -> ObjectPatProp {
         span: DUMMY_SP,
         key: Ident::new(key.into(), DUMMY_SP),
         value: None
+    })
+}
+
+fn create_signature(key: &str) -> TsTypeElement {
+    TsTypeElement::TsPropertySignature(TsPropertySignature {
+        span: DUMMY_SP,
+        readonly: false,
+        key: Box::new(Expr::Ident(Ident::new(
+            key.into(),
+            DUMMY_SP
+        ))),
+        computed: false,
+        optional: true,
+        init: None,
+        params: vec![],
+        type_ann: Some(Box::new(TsTypeAnn {
+            span: DUMMY_SP,
+            type_ann: Box::new(TsType::TsKeywordType(TsKeywordType {
+                span: DUMMY_SP,
+                kind: TsKeywordTypeKind::TsStringKeyword,
+            })),
+        })),
+        type_params: None,
     })
 }
