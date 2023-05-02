@@ -51,7 +51,11 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
     }
     let jsx_element = jsx_element.unwrap();
 
-    let m = transform_svg_component::transform(jsx_element, &config, &state)?;
+    let m = transform_svg_component::transform(jsx_element, &config, &state);
+    if m.is_err() {
+        return Err(Error::from_reason(m.unwrap_err()));
+    }
+    let m = m.unwrap();
 
     let m = m.fold_with(&mut as_folder(remove_jsx_attribute::Visitor::new(&config)));
     let m = m.fold_with(&mut as_folder(add_jsx_attribute::Visitor::new(&config)));

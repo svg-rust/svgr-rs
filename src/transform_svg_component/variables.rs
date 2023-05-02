@@ -4,7 +4,6 @@ use swc_core::{
     common::{SourceMap, FileName},
     ecma::{ast::*, parser},
 };
-use napi::bindgen_prelude::*;
 
 use super::core;
 
@@ -62,7 +61,7 @@ pub struct Options {
     pub import_source: Option<String>,
 }
 
-pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JSXElement) -> Result<TemplateVariables> {
+pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JSXElement) -> Result<TemplateVariables, String> {
     let mut interfaces = vec![];
     let mut props = vec![];
     let mut imports = vec![];
@@ -348,7 +347,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
                 }
             }
         } else {
-            return Err(Error::from_reason(r#""namedExport" not specified"#));
+            return Err(r#""namedExport" not specified"#.to_string());
         }
     }
 
@@ -372,7 +371,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
     })
 }
 
-fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<ModuleItem> {
+fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<ModuleItem, String> {
     let specifiers = get_jsx_runtime_import_specifiers(cfg)?;
 
     Ok(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
@@ -388,7 +387,7 @@ fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<Module
     })))
 }
 
-fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Result<Vec<ImportSpecifier>> {
+fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Result<Vec<ImportSpecifier>, String> {
     if let Some(namespace) = cfg.namespace.clone() {
         let specifier = ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
@@ -430,7 +429,7 @@ fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Re
         return Ok(import_specifiers);
     }
 
-    Err(Error::from_reason(r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#))
+    Err(r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#.to_string())
 }
 
 fn get_or_create_import(imports: &mut Vec<ModuleItem>, soruce_value: &str, specifier: ImportSpecifier) {
