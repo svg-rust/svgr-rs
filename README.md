@@ -68,12 +68,6 @@ Transform time without SVGO and Prettier in W3C SVG 1.1 TestSuite:
 - [x] titleProp
 - [x] descProp
 - [ ] template
-- [ ] outDir
-- [ ] indexTemplate
-- [ ] index
-- [ ] ignoreExisting
-- [ ] filenameCase
-- [ ] ext
 
 # License
 
