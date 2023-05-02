@@ -5,7 +5,7 @@ use std::{
 };
 
 use swc_core::{
-    common::DUMMY_SP,
+    common::{DUMMY_SP, Span, comments::{Comment, CommentKind, Comments}},
     ecma::{
         ast::*,
         visit::{VisitMut, VisitMutWith}
@@ -13,21 +13,23 @@ use swc_core::{
 };
 use linked_hash_set::LinkedHashSet;
 
-pub struct Visitor {
+pub struct Visitor<'a> {
     replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
     unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
+    comments: &'a dyn Comments,
 }
 
-impl Visitor {
-    pub fn new() -> Self {
+impl<'a> Visitor<'a> {
+    pub fn new(comments: &'a dyn Comments) -> Self {
         Visitor {
             replaced_components: Rc::new(RefCell::new(LinkedHashSet::new())),
             unsupported_components: Rc::new(RefCell::new(LinkedHashSet::new())),
+            comments,
         }
     }
 }
 
-impl VisitMut for Visitor {
+impl VisitMut for Visitor<'_> {
     fn visit_mut_module(&mut self, n: &mut Module) {
         let mut svg_element_visitor = SvgElementVisitor::new(
             self.replaced_components.clone(),
@@ -35,10 +37,19 @@ impl VisitMut for Visitor {
         );
         n.visit_mut_with(&mut svg_element_visitor);
 
-        // TODO: swc currently does not support comments node in ast.
-
         let mut import_decl_visitor = ImportDeclVisitor::new(self.replaced_components.clone());
         n.visit_mut_with(&mut import_decl_visitor);
+
+        if let Some(span) = import_decl_visitor.import_decl_span {
+            let component_list = self.unsupported_components.borrow().clone().into_iter().collect::<Vec<String>>().join(", ");
+            self.comments.add_trailing_comments(span.hi, vec![
+                Comment {
+                    kind: CommentKind::Block,
+                    span: DUMMY_SP,
+                    text: format!(" SVGR has dropped some elements not supported by react-native-svg: {} ", component_list).into(),
+                }
+            ]);
+        }
     }
 }
 
@@ -167,12 +178,14 @@ fn get_element_to_component() -> HashMap<&'static str, &'static str> {
 
 struct ImportDeclVisitor {
     replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+    import_decl_span: Option<Span>,
 }
 
 impl ImportDeclVisitor {
     fn new(replaced_components: Rc<RefCell<LinkedHashSet<String>>>) -> Self {
         ImportDeclVisitor {
             replaced_components,
+            import_decl_span: None,
         }
     }
 }
@@ -189,7 +202,7 @@ impl VisitMut for ImportDeclVisitor {
                     }
                     false
                 }) {
-                    return;
+                    break;
                 }
 
                 n.specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
@@ -202,6 +215,8 @@ impl VisitMut for ImportDeclVisitor {
                     is_type_only: false,
                 }));
             }
+
+            self.import_decl_span = Some(n.span);
         } else if n.src.value.to_string() == "expo" {
             n.specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
                 local: Ident::new(
@@ -212,8 +227,8 @@ impl VisitMut for ImportDeclVisitor {
                 span: DUMMY_SP,
                 is_type_only: false,
             }));
-        } else {
-            return;
+
+            self.import_decl_span = Some(n.span);
         }
     }
 }
@@ -222,7 +237,7 @@ impl VisitMut for ImportDeclVisitor {
 mod tests {
     use std::sync::Arc;
     use swc_core::{
-        common::{SourceMap, FileName},
+        common::{SourceMap, FileName, comments::SingleThreadedComments},
         ecma::{
             ast::*,
             parser::{lexer::Lexer, Parser, StringInput, Syntax, EsConfig},
@@ -251,7 +266,8 @@ mod tests {
         let mut parser = Parser::new_from(lexer);
         let module = parser.parse_module().unwrap();
 
-        let module = module.fold_with(&mut as_folder(Visitor::new()));
+        let comments = SingleThreadedComments::default();
+        let module = module.fold_with(&mut as_folder(Visitor::new(&comments)));
 
         let mut buf = vec![];
         let mut emitter = Emitter {
@@ -259,7 +275,7 @@ mod tests {
                 ..Default::default()
             },
             cm: cm.clone(),
-            comments: None,
+            comments: Some(&comments),
             wr: JsWriter::new(cm, "", &mut buf, None),
         };
         emitter.emit_module(&module).unwrap();
@@ -280,7 +296,7 @@ mod tests {
     fn should_add_import() {
         code_test(
             r#"import Svg from 'react-native-svg'; <svg><g/><div/></svg>;"#,
-            r#"import Svg, { G } from 'react-native-svg';<Svg><G/></Svg>;"#,
+            r#"import Svg, { G } from 'react-native-svg'; /* SVGR has dropped some elements not supported by react-native-svg: div */ <Svg><G/></Svg>;"#,
         );
     }
 }

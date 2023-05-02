@@ -8,7 +8,7 @@ extern crate napi_derive;
 use std::{sync::Arc, borrow::Borrow};
 use swc_xml::{parser::{parse_file_as_document, parser}};
 use swc_core::{
-    common::{SourceMap, FileName},
+    common::{SourceMap, FileName, comments::SingleThreadedComments},
     ecma::{
         codegen::{text_writer::JsWriter, Emitter, Config},
         visit::{FoldWith, as_folder},
@@ -95,7 +95,8 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
 
     let native = config.native.unwrap_or(false);
     let m = if native {
-        m.fold_with(&mut as_folder(transform_react_native_svg::Visitor::new()))
+        let comments = SingleThreadedComments::default();
+        m.fold_with(&mut as_folder(transform_react_native_svg::Visitor::new(&comments)))
     } else {
         m
     };
