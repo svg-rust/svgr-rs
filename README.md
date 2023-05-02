@@ -42,7 +42,13 @@ const jsCode = await transform(
 )
 ```
 
-## Roadmap
+# Benchmarks
+
+Transform time without SVGO and Prettier in W3C SVG 1.1 TestSuite:
+
+![Transform time](./snapshots/transform-time.png)
+
+# Roadmap
 
 - [x] jsxRuntime
 - [x] jsxRuntimeImport
