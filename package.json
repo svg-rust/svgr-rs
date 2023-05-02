@@ -1,6 +1,6 @@
 {
   "name": "@svgr-rs/core",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "main": "index.js",
   "types": "index.d.ts",
   "author": "SyMind <dacongsama@live.com>",
