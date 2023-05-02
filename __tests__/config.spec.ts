@@ -33,11 +33,11 @@ const configs: (Config & { state?: Partial<State> })[] = [
 	{ titleProp: true },
 	{ descProp: true },
 	{ memo: true },
-	// {
-	// 	namedExport: 'Component',
-	// 	state: { caller: { previousExport: 'export default "logo.svg";' } },
-	// },
-	// { exportType: 'named' },
+	{
+		namedExport: 'Component',
+		state: { caller: { previousExport: 'export default "logo.svg";' } },
+	},
+	{ exportType: 'named' },
 	{ jsxRuntime: 'automatic' },
 	{ jsxRuntime: 'classic-preact' },
 	{ jsxRuntimeImport: { source: 'hyperapp-jsx-pragma', defaultSpecifier: 'h' } }

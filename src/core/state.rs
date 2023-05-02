@@ -2,7 +2,7 @@ use std::path::Path;
 use regex::Regex;
 
 #[napi(object)]
-#[derive(Default)]
+#[derive(Debug, Clone, Default)]
 pub struct Caller {
     pub name: Option<String>,
     pub previous_export: Option<String>,
@@ -16,6 +16,7 @@ pub struct Config {
     pub caller: Option<Caller>,
 }
 
+#[derive(Debug)]
 pub struct InternalConfig {
     pub file_path: Option<String>,
     pub component_name: String,
@@ -84,7 +85,7 @@ pub fn expand_state(state: Option<&Config>) -> InternalConfig {
                         }
                     }
                 },
-                ..Default::default()
+                caller: state.caller.clone(),
             }
         },
         None => InternalConfig {

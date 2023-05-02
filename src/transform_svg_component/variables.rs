@@ -61,7 +61,7 @@ pub struct Options {
     pub import_source: Option<String>,
 }
 
-pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JSXElement) -> TemplateVariables {
+pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JSXElement) -> Result<TemplateVariables, String> {
     let mut interfaces = vec![];
     let mut props = vec![];
     let mut imports = vec![];
@@ -79,7 +79,8 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
     if !is_automatic {
         match opts.jsx_runtime_import {
             Some(jsx_runtime_import) => {
-                imports.push(get_jsx_runtime_import(&jsx_runtime_import));
+                let jsx_runtime_import = get_jsx_runtime_import(&jsx_runtime_import)?;
+                imports.push(jsx_runtime_import);
             }
             None => {
                 let default_jsx_runtime_import = core::config::JSXRuntimeImport {
@@ -87,7 +88,8 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
                     namespace: Some("React".to_string()),
                     ..Default::default()
                 };
-                imports.push(get_jsx_runtime_import(&default_jsx_runtime_import));
+                let jsx_runtime_import = get_jsx_runtime_import(&default_jsx_runtime_import)?;
+                imports.push(jsx_runtime_import);
             }
         }
     }
@@ -314,6 +316,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
                 })),
                 is_type_only: false,
             });
+
             exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportNamed(NamedExport {
                 span: DUMMY_SP,
                 specifiers: vec![specifier],
@@ -344,7 +347,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
                 }
             }
         } else {
-            panic!(r#""named_export" not specified"#);
+            return Err(r#""namedExport" not specified"#.to_string());
         }
     }
 
@@ -358,20 +361,20 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         })));
     }
 
-    TemplateVariables {
+    Ok(TemplateVariables {
         component_name: state.component_name.clone(),
         interfaces,
         props,
         imports,
         exports,
         jsx,
-    }
+    })
 }
 
-fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> ModuleItem {
-    let specifiers = get_jsx_runtime_import_specifiers(cfg);
+fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<ModuleItem, String> {
+    let specifiers = get_jsx_runtime_import_specifiers(cfg)?;
 
-    ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
+    Ok(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
         span: DUMMY_SP,
         specifiers,
         src: Box::new(Str {
@@ -381,10 +384,10 @@ fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> ModuleItem {
         }),
         type_only: false,
         asserts: None,
-    }))
+    })))
 }
 
-fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Vec<ImportSpecifier> {
+fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Result<Vec<ImportSpecifier>, String> {
     if let Some(namespace) = cfg.namespace.clone() {
         let specifier = ImportSpecifier::Namespace(ImportStarAsSpecifier {
             span: DUMMY_SP,
@@ -394,7 +397,7 @@ fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Ve
                 optional: false,
             },
         });
-        return vec![specifier];
+        return Ok(vec![specifier]);
     }
 
     if let Some(default_specifier) = cfg.default_specifier.clone() {
@@ -406,7 +409,7 @@ fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Ve
                 optional: false,
             },
         });
-        return vec![specifier];
+        return Ok(vec![specifier]);
     }
 
     if let Some(specifiers) = cfg.specifiers.clone() {
@@ -423,10 +426,10 @@ fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Ve
                 is_type_only: false,
             }));
         }
-        return import_specifiers;
+        return Ok(import_specifiers);
     }
 
-    panic!(r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#);
+    Err(r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#.to_string())
 }
 
 fn get_or_create_import(imports: &mut Vec<ModuleItem>, soruce_value: &str, specifier: ImportSpecifier) {

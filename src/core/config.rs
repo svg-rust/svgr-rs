@@ -102,7 +102,7 @@ pub struct JSXRuntimeImport {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(untagged)]
+#[serde(rename_all = "kebab-case")]
 pub enum ExportType {
     Named,
     Default,
@@ -153,9 +153,13 @@ pub struct Config {
     #[serde(default)]
     pub jsx_runtime_import: Option<JSXRuntimeImport>,
 
-    #[serde(default)]
-    pub named_export: Option<String>,
+    #[serde(default = "default_named_export")]
+    pub named_export: String,
 
     #[serde(default)]
     pub export_type: Option<ExportType>,
+}
+
+fn default_named_export() -> String {
+    "ReactComponent".to_string()
 }

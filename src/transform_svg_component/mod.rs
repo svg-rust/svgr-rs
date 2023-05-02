@@ -27,7 +27,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
         _ref: config._ref.unwrap_or(false),
         native: config.native.unwrap_or(false),
         memo: config.memo.unwrap_or(false),
-        named_export: config.named_export.clone(),
+        named_export: Some(config.named_export.clone()),
         export_type,
         ..Default::default()
     };
@@ -67,10 +67,10 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
     opts
 }
 
-pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: &core::state::InternalConfig) -> Module {
+pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: &core::state::InternalConfig) -> Result<Module, String> {
     let variables_options = get_variables_options(config);
 
-    let variables = variables::get_variables(variables_options, state, jsx_element);
+    let variables = variables::get_variables(variables_options, state, jsx_element)?;
 
     let mut body = vec![];
 
@@ -109,11 +109,11 @@ pub fn transform(jsx_element: JSXElement, config: &core::config::Config, state: 
         body.push(export);
     }
 
-    Module {
+    Ok(Module {
         span: DUMMY_SP,
         body,
         shebang: None,
-    }
+    })
 }
 
 #[cfg(test)]
@@ -146,7 +146,7 @@ mod tests {
 
         let jsx_element = expr.as_jsx_element().unwrap();
 
-        let m = transform(*jsx_element.clone(), config, state);
+        let m = transform(*jsx_element.clone(), config, state).unwrap();
 
         let mut buf = vec![];
         let mut emitter = Emitter {
@@ -629,7 +629,7 @@ export default Memo;
         test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                named_export: Some("Component".to_string()),
+                named_export: "Component".to_string(),
                 expand_props: core::config::ExpandProps::Bool(false),
                 ..Default::default()
             },
@@ -663,7 +663,7 @@ export default img;
         test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                named_export: Some("ReactComponent".to_string()),
+                named_export: "ReactComponent".to_string(),
                 export_type: Some(core::config::ExportType::Named),
                 expand_props: core::config::ExpandProps::Bool(false),
                 ..Default::default()
@@ -814,7 +814,7 @@ export default SvgComponent;
     }
 
     #[test]
-    #[should_panic(expected = r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#)]
+    #[should_panic(expected = r#"called `Result::unwrap()` on an `Err` value: "Specify \"namespace\", \"defaultSpecifier\", or \"specifiers\" in \"jsxRuntimeImport\" option"#)]
     fn throws_with_invalid_configuration() {
         test_code(
             r#"<svg><g/></svg>"#,
