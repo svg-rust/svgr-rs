@@ -9,6 +9,11 @@ const svgBaseCode = `
 </svg>
 `
 
+test('without config and state', async t => {
+	const result = await transform(svgBaseCode)
+	t.snapshot(result)
+})
+
 const configs: (Config & { state?: Partial<State> })[] = [
 	{ dimensions: false },
 	{ expandProps: false },

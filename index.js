@@ -1,6 +1,6 @@
 const { transform } = require('./binding')
 
-function toBuffer(t) {
+function toBuffer(t = {}) {
   return Buffer.from(JSON.stringify(t))
 }
 
