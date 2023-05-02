@@ -28,7 +28,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
         _ref: config._ref.unwrap_or(false),
         native: config.native.unwrap_or(false),
         memo: config.memo.unwrap_or(false),
-        named_export: config.named_export.clone(),
+        named_export: Some(config.named_export.clone()),
         export_type,
         ..Default::default()
     };
@@ -630,7 +630,7 @@ export default Memo;
         test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                named_export: Some("Component".to_string()),
+                named_export: "Component".to_string(),
                 expand_props: core::config::ExpandProps::Bool(false),
                 ..Default::default()
             },
@@ -664,7 +664,7 @@ export default img;
         test_js_n_ts(
             r#"<svg><g/></svg>"#,
             &core::config::Config {
-                named_export: Some("ReactComponent".to_string()),
+                named_export: "ReactComponent".to_string(),
                 export_type: Some(core::config::ExportType::Named),
                 expand_props: core::config::ExpandProps::Bool(false),
                 ..Default::default()

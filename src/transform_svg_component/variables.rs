@@ -348,7 +348,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
                 }
             }
         } else {
-            return Err(Error::from_reason(r#""named_export" not specified"#));
+            return Err(Error::from_reason(r#""namedExport" not specified"#));
         }
     }
 
