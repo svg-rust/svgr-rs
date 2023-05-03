@@ -67,7 +67,6 @@ Transform time without SVGO and Prettier in W3C SVG 1.1 TestSuite:
 - [x] svgProps
 - [x] titleProp
 - [x] descProp
-- [ ] template
 
 # License
 
