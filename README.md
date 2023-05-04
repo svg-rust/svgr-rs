@@ -1,6 +1,6 @@
 <h1 align="center">SVGR RS</h1>
 
-<p align="center">SVGR rewritten in Rust 🦀</p>
+<p align="center">Speedy SVGR rewritten in Rust 🦀</p>
 
 > ⚠️ RVGR RS is in early development and should not be used in production, expect bugs! 🐛
 
@@ -59,7 +59,7 @@ Transform time without SVGO and Prettier in W3C SVG 1.1 TestSuite:
 - [x] expandProps
 - [ ] prettier
 - [ ] prettierConfig
-- [ ] svgo
+- [ ] svgo ([Speedy SVGO rewritten in Rust](https://github.com/svg-rust/svgo-rs) is working in progress)
 - [ ] svgoConfig
 - [x] ref
 - [x] memo

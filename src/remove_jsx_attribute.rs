@@ -106,7 +106,7 @@ mod tests {
         emitter.emit_module(&module).unwrap();
         let result = String::from_utf8_lossy(&buf).to_string();
 
-        assert_eq!(result, expected)
+        assert_eq!(result, expected);
     }
 
     #[test]
