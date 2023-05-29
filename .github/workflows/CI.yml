@@ -35,6 +35,7 @@ jobs:
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
             build: |-
               set -e &&
+              rustup default nightly &&
               yarn build --target x86_64-unknown-linux-gnu &&
               strip *.node
           - host: macos-latest

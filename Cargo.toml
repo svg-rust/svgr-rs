@@ -16,7 +16,6 @@ regex = "1.7.3"
 serde = { version = "1", features = ["derive"] }
 swc_xml = "0.10.3"
 swc_core = { version = "0.74.2", features = [
-  "allocator_node",
   "ecma_ast",
   "ecma_ast_serde",
   "common_concurrent",
