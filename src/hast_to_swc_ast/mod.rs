@@ -189,7 +189,7 @@ impl HastVisitor {
         if let Some(k) = mapped_attr {
             return Ident {
                 span: DUMMY_SP,
-                sym: k.clone().into(),
+                sym: JsWord::from(*k),
                 optional: false,
             }
         }
