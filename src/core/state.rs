@@ -1,15 +1,30 @@
 use std::path::Path;
 use regex::Regex;
 
+#[cfg(feature = "node")]
 #[napi(object)]
 #[derive(Debug, Clone, Default)]
 pub struct Caller {
     pub name: Option<String>,
     pub previous_export: Option<String>,
-    // defaultPlugins?: ConfigPlugin[]
 }
 
+#[cfg(not(feature = "node"))]
+#[derive(Debug, Clone, Default)]
+pub struct Caller {
+    pub name: Option<String>,
+    pub previous_export: Option<String>,
+}
+
+#[cfg(feature = "node")]
 #[napi(object)]
+pub struct Config {
+    pub file_path: Option<String>,
+    pub component_name: Option<String>,
+    pub caller: Option<Caller>,
+}
+
+#[cfg(not(feature = "node"))]
 pub struct Config {
     pub file_path: Option<String>,
     pub component_name: Option<String>,

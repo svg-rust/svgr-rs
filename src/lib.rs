@@ -2,6 +2,7 @@
 
 #![deny(clippy::all)]
 
+#[cfg(feature = "node")]
 #[macro_use]
 extern crate napi_derive;
 
@@ -13,9 +14,9 @@ use swc_core::{
         codegen::{text_writer::JsWriter, Emitter, Config},
         visit::{FoldWith, as_folder},
     },
-    node::get_deserialized,
 };
-use napi::bindgen_prelude::*;
+#[cfg(feature = "node")]
+use swc_core::node::get_deserialized;
 
 mod hast_to_swc_ast;
 mod core;
@@ -28,9 +29,7 @@ mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
 
-#[napi]
-pub async fn transform(code: String, config: Buffer, state: Option<core::state::Config>) -> Result<String> {
-    let config: core::config::Config = get_deserialized(&config)?;
+pub fn transform(code: String, config: core::config::Config, state: Option<core::state::Config>) -> Result<String, String> {
     let state = core::state::expand_state(state.as_ref());
 
     let cm = Arc::<SourceMap>::default();
@@ -47,13 +46,13 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
 
     let jsx_element = hast_to_swc_ast::to_swc_ast(document);
     if jsx_element.is_none() {
-        return Err(Error::from_reason("This is invalid SVG"));
+        return Err("This is invalid SVG".to_string());
     }
     let jsx_element = jsx_element.unwrap();
 
     let m = transform_svg_component::transform(jsx_element, &config, &state);
     if m.is_err() {
-        return Err(Error::from_reason(m.unwrap_err()));
+        return Err(m.unwrap_err());
     }
     let m = m.unwrap();
 
@@ -114,4 +113,14 @@ pub async fn transform(code: String, config: Buffer, state: Option<core::state::
     emitter.emit_module(&m).unwrap();
 
     Ok(String::from_utf8_lossy(&buf).to_string())
+}
+
+#[cfg(feature = "node")]
+#[napi(js_name = "transform")]
+pub async fn node_transform(code: String, config: napi::bindgen_prelude::Buffer, state: Option<core::state::Config>) -> napi::bindgen_prelude::Result<String> {
+    let config: core::config::Config = get_deserialized(&config)?;
+    match transform(code, config, state) {
+        Ok(result) => napi::bindgen_prelude::Result::Ok(result),
+        Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(reason)),
+    }
 }
