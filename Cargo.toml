@@ -1,7 +1,11 @@
 [package]
-name = "svgr-rs"
-version = "0.1.0"
-edition = "2021"
+authors     = ["SyMind <dacongsama@live.com>"]
+description = "A tool to transform SVG into React components"
+name        = "svgr-rs"
+edition     = "2021"
+license     = "MIT"
+repository  = "https://github.com/svg-rust/svgr-rs.git"
+version     = "0.1.0"
 
 [lib]
 crate-type = ["cdylib"]
