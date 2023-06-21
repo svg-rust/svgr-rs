@@ -8,7 +8,8 @@ use swc_core::{
     common::{DUMMY_SP, Span, comments::{Comment, CommentKind, Comments}},
     ecma::{
         ast::*,
-        visit::{VisitMut, VisitMutWith}
+        visit::{VisitMut, VisitMutWith},
+        atoms::JsWord,
     },
 };
 use linked_hash_set::LinkedHashSet;
@@ -115,10 +116,10 @@ impl JSXElementVisitor {
             let element = ident.sym.to_string();
             if let Some(component) = self.element_to_component.get(&element.as_str()) {
                 self.replaced_components.borrow_mut().insert(component.to_string());
-                ident.sym = component.clone().into();
+                ident.sym = JsWord::from(*component);
                 if let Some(closing) = &mut n.closing {
                     if let JSXElementName::Ident(ident) = &mut closing.name {
-                        ident.sym = component.clone().into();
+                        ident.sym = JsWord::from(*component);
                     }
                 }
             } else {
@@ -207,7 +208,7 @@ impl VisitMut for ImportDeclVisitor {
 
                 n.specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
                     local: Ident::new(
-                        component.clone().into(),
+                        JsWord::from(component.as_str()),
                         DUMMY_SP
                     ),
                     imported: None,

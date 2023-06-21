@@ -1,15 +1,22 @@
 [package]
-name = "svgr-rs"
-version = "0.1.0"
-edition = "2021"
+authors     = ["SyMind <dacongsama@live.com>"]
+description = "A tool to transform SVG into React components"
+name        = "svgr-rs"
+edition     = "2021"
+license     = "MIT"
+repository  = "https://github.com/svg-rust/svgr-rs.git"
+version     = "0.1.0"
 
 [lib]
 crate-type = ["cdylib"]
 
+[features]
+node = ["dep:napi", "dep:napi-derive"]
+
 [dependencies]
 # Default enable napi4 feature, see https://nodejs.org/api/n-api.html#node-api-version-matrix
-napi = { version = "2.12.0", default-features = false, features = ["napi4", "async"] }
-napi-derive = "2.12.2"
+napi = { version = "2.12.0", default-features = false, features = ["napi4", "async"], optional = true }
+napi-derive = { version = "2.12.2", optional = true }
 
 clap = { version = "4.2.0", features = ["derive"] }
 regex = "1.7.3"

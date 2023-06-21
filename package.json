@@ -29,19 +29,19 @@
   "ava": {
     "timeout": "3m",
     "extensions": {
-			"ts": "module"
-		},
-		"nodeArguments": [
-			"--loader=ts-node/esm"
-		]
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ]
   },
   "engines": {
     "node": ">= 10"
   },
   "scripts": {
     "artifacts": "napi artifacts",
-    "build": "napi build --platform --release --js binding.js --dts binding.d.ts",
-    "build:debug": "napi build --platform --js binding.js --dts binding.d.ts",
+    "build": "napi build --platform --release --js binding.js --dts binding.d.ts --features node",
+    "build:debug": "napi build --platform --js binding.js --dts binding.d.ts --features node",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "ava",
     "universal": "napi universal",
