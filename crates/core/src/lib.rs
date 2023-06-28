@@ -11,7 +11,7 @@ use swc_xml::{parser::{parse_file_as_document, parser}};
 use swc_core::{
     common::{SourceMap, FileName, comments::SingleThreadedComments},
     ecma::{
-        codegen::{text_writer::JsWriter, Emitter, Config},
+        codegen::{text_writer::JsWriter, Emitter},
         visit::{FoldWith, as_folder},
     },
 };
@@ -20,7 +20,6 @@ use swc_core::node::get_deserialized;
 
 mod hast_to_swc_ast;
 mod core;
-
 mod transform_svg_component;
 mod add_jsx_attribute;
 mod remove_jsx_attribute;
@@ -29,7 +28,10 @@ mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
 
-pub fn transform(code: String, config: core::config::Config, state: Option<core::state::Config>) -> Result<String, String> {
+pub use self::core::config::Config as Config;
+pub use self::core::state::Config as State;
+
+pub fn transform(code: String, config: Config, state: Option<State>) -> Result<String, String> {
     let state = core::state::expand_state(state.as_ref());
 
     let cm = Arc::<SourceMap>::default();
@@ -103,9 +105,7 @@ pub fn transform(code: String, config: core::config::Config, state: Option<core:
     let mut buf = vec![];
 
     let mut emitter = Emitter {
-        cfg: Config {
-            ..Default::default()
-        },
+        cfg: Default::default(),
         cm: cm.clone(),
         comments: None,
         wr: JsWriter::new(cm, "\n", &mut buf, None),
@@ -117,8 +117,8 @@ pub fn transform(code: String, config: core::config::Config, state: Option<core:
 
 #[cfg(feature = "node")]
 #[napi(js_name = "transform")]
-pub async fn node_transform(code: String, config: napi::bindgen_prelude::Buffer, state: Option<core::state::Config>) -> napi::bindgen_prelude::Result<String> {
-    let config: core::config::Config = get_deserialized(&config)?;
+pub async fn node_transform(code: String, config: napi::bindgen_prelude::Buffer, state: Option<State>) -> napi::bindgen_prelude::Result<String> {
+    let config: Config = get_deserialized(&config)?;
     match transform(code, config, state) {
         Ok(result) => napi::bindgen_prelude::Result::Ok(result),
         Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(reason)),
