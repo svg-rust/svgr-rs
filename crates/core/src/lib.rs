@@ -26,8 +26,8 @@ mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
 
-pub use self::core::config::Config as Config;
-pub use self::core::state::Config as State;
+pub use self::core::config::{Config, ExpandProps, Icon, JSXRuntime, JSXRuntimeImport, ExportType};
+pub use self::core::state::{Config as State, Caller};
 
 /// Transform SVG into React components.
 /// 
