@@ -5,7 +5,7 @@ name        = "svgr-rs"
 edition     = "2021"
 license     = "MIT"
 repository  = "https://github.com/svg-rust/svgr-rs.git"
-version     = "0.1.0"
+version     = "0.1.1"
 
 [features]
 node = ["dep:napi", "dep:napi-derive"]
