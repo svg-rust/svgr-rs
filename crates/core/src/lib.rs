@@ -42,7 +42,9 @@ pub use self::core::state::Config as State;
 /// Basic usage:
 /// 
 /// ```rust
-/// let result = transform_core(code, Default::default(), Default::default());
+/// use svgr_rs::transform;
+/// 
+/// let result = transform(r#"<svg></svg>"#.to_string(), Default::default(), Default::default());
 /// ```
 pub fn transform(code: String, config: Config, state: State) -> Result<String, String> {
     let state = core::state::expand_state(&state);

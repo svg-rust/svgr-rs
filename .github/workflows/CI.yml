@@ -59,6 +59,8 @@ jobs:
             target: aarch64-pc-windows-msvc
             build: yarn build --target aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
+    needs:
+      - cargo-test
     runs-on: ${{ matrix.settings.host }}
     steps:
       - uses: actions/checkout@v3
