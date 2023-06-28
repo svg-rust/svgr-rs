@@ -17,6 +17,18 @@ env:
       - docs/**
   pull_request: null
 jobs:
+  cargo-test:
+    name: Test cargo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly
+          target: x86_64-unknown-linux-gnu
+      - name: Run cargo test
+        run: cargo test -p svgr-rs
   build:
     strategy:
       fail-fast: false
