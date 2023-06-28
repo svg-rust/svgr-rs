@@ -29,6 +29,21 @@ mod transform_react_native_svg;
 pub use self::core::config::Config as Config;
 pub use self::core::state::Config as State;
 
+/// Transform SVG into React components.
+/// 
+/// It takes three arguments:
+/// 
+/// * source: the SVG source code to transform
+/// * options: the options used to transform the SVG
+/// * state: a state linked to the transformation
+/// 
+/// # Examples
+/// 
+/// Basic usage:
+/// 
+/// ```rust
+/// let result = transform_core(code, Default::default(), Default::default());
+/// ```
 pub fn transform(code: String, config: Config, state: State) -> Result<String, String> {
     let state = core::state::expand_state(&state);
 

@@ -16,11 +16,19 @@ pub struct Caller {
     pub previous_export: Option<String>,
 }
 
+/// The state linked to the transformation.
 #[cfg(feature = "node")]
 #[napi(object, js_name = "State")]
 pub struct Config {
+    /// The name of the file that is generated, mainly used to find runtime config file to apply.
     pub file_path: Option<String>,
+
+    /// The name of the component that will be used in the generated component.
     pub component_name: Option<String>,
+
+    /// If you create a tool based on SVGR, it is always better to specify `state.caller`.
+    /// It permits the inter-operability betweens plugins.
+    /// If someone create a SVGR plugin it could adapt it specifically to your tool.
     pub caller: Option<Caller>,
 }
 

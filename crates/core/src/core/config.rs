@@ -108,54 +108,80 @@ pub enum ExportType {
     Default,
 }
 
+/// The options used to transform the SVG.
 #[derive(Debug, Clone, Default, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Config {
+    /// Setting this to `true` will forward ref to the root SVG tag.
     #[serde(default)]
     #[serde(rename(serialize = "ref"))]
     pub _ref: Option<bool>,
 
+    /// Add title tag via title property.
+    /// If title_prop is set to true and no title is provided at render time, this will fallback to an existing title element in the svg if exists.
     #[serde(default)]
     pub title_prop: Option<bool>,
 
+    /// Add desc tag via desc property.
+    /// If desc_prop is set to true and no description is provided at render time, this will fallback to an existing desc element in the svg if exists.
     #[serde(default)]
     pub desc_prop: Option<bool>,
 
+    /// All properties given to component will be forwarded on SVG tag.
+    /// Possible values: "start", "end" or false.
     #[serde(default)]
     pub expand_props: ExpandProps,
 
+    /// Keep `width` and `height` attributes from the root SVG tag.
+    /// Removal is guaranteed if `dimensions: false`, unlike the `remove_dimensions: true` SVGO plugin option which also generates a `viewBox` from the dimensions if no `viewBox` is present.
     #[serde(default)]
     pub dimensions: Option<bool>,
 
+    /// Replace SVG `width` and `height` by a custom value.
+    /// If value is omitted, it uses `1em` in order to make SVG size inherits from text size.
     #[serde(default)]
     pub icon: Option<Icon>,
 
+    /// Modify all SVG nodes with uppercase and use a specific template with `react-native-svg` imports.
+    /// All unsupported nodes will be removed.
     #[serde(default)]
     pub native: Option<bool>,
 
+    /// Add props to the root SVG tag.
     #[serde(default)]
     // Deserialize object/map while maintaining order
     // here: https://github.com/serde-rs/serde/issues/269
     pub svg_props: Option<LinkedHashMap<String, String>>,
 
+    /// Generates `.tsx` files with TypeScript typings.
     #[serde(default)]
     pub typescript: Option<bool>,
 
+    /// Setting this to `true` will wrap the exported component in `React.memo`.
     #[serde(default)]
     pub memo: Option<bool>,
 
+    /// Replace an attribute value by an other.
+    /// The main usage of this option is to change an icon color to "currentColor" in order to inherit from text color.
     #[serde(default)]
     pub replace_attr_values: Option<LinkedHashMap<String, String>>,
 
+    /// Specify a JSX runtime to use.
+    /// * "classic": adds `import * as React from 'react'` on the top of file
+    /// * "automatic": do not add anything
+    /// * "classic-preact": adds `import { h } from 'preact'` on the top of file
     #[serde(default)]
     pub jsx_runtime: Option<JSXRuntime>,
 
+    /// Specify a custom JSX runtime source to use. Allows to customize the import added at the top of generated file.
     #[serde(default)]
     pub jsx_runtime_import: Option<JSXRuntimeImport>,
 
+    /// The named export defaults to `ReactComponent`, can be customized with the `named_export` option.
     #[serde(default = "default_named_export")]
     pub named_export: String,
 
+    /// If you prefer named export in any case, you may set the `export_type` option to `named`.
     #[serde(default)]
     pub export_type: Option<ExportType>,
 }
