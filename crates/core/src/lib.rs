@@ -29,8 +29,8 @@ mod transform_react_native_svg;
 pub use self::core::config::Config as Config;
 pub use self::core::state::Config as State;
 
-pub fn transform(code: String, config: Config, state: Option<State>) -> Result<String, String> {
-    let state = core::state::expand_state(state.as_ref());
+pub fn transform(code: String, config: Config, state: State) -> Result<String, String> {
+    let state = core::state::expand_state(&state);
 
     let cm = Arc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon, code.to_string());
