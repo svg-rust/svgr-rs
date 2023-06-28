@@ -11,10 +11,9 @@ export interface Caller {
   name?: string
   previousExport?: string
 }
-export interface Config {
+export interface State {
   filePath?: string
   componentName?: string
   caller?: Caller
 }
-export function transform(code: string, config: Buffer, state?: State | undefined | null): Promise<string>
 export function transform(code: string, config: Buffer, state?: State | undefined | null): Promise<string>

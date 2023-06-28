@@ -252,7 +252,6 @@ if (!nativeBinding) {
   throw new Error(`Failed to load native binding`)
 }
 
-const { transform, transform } = nativeBinding
+const { transform } = nativeBinding
 
-module.exports.transform = transform
 module.exports.transform = transform

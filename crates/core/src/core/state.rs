@@ -17,7 +17,7 @@ pub struct Caller {
 }
 
 #[cfg(feature = "node")]
-#[napi(object)]
+#[napi(object, js_name = "State")]
 pub struct Config {
     pub file_path: Option<String>,
     pub component_name: Option<String>,

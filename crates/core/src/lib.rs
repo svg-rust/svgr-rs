@@ -15,8 +15,6 @@ use swc_core::{
         visit::{FoldWith, as_folder},
     },
 };
-#[cfg(feature = "node")]
-use swc_core::node::get_deserialized;
 
 mod hast_to_swc_ast;
 mod core;
@@ -113,14 +111,4 @@ pub fn transform(code: String, config: Config, state: Option<State>) -> Result<S
     emitter.emit_module(&m).unwrap();
 
     Ok(String::from_utf8_lossy(&buf).to_string())
-}
-
-#[cfg(feature = "node")]
-#[napi(js_name = "transform")]
-pub async fn node_transform(code: String, config: napi::bindgen_prelude::Buffer, state: Option<State>) -> napi::bindgen_prelude::Result<String> {
-    let config: Config = get_deserialized(&config)?;
-    match transform(code, config, state) {
-        Ok(result) => napi::bindgen_prelude::Result::Ok(result),
-        Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(reason)),
-    }
 }
