@@ -11,16 +11,13 @@ use swc_xml::{parser::{parse_file_as_document, parser}};
 use swc_core::{
     common::{SourceMap, FileName, comments::SingleThreadedComments},
     ecma::{
-        codegen::{text_writer::JsWriter, Emitter, Config},
+        codegen::{text_writer::JsWriter, Emitter},
         visit::{FoldWith, as_folder},
     },
 };
-#[cfg(feature = "node")]
-use swc_core::node::get_deserialized;
 
 mod hast_to_swc_ast;
 mod core;
-
 mod transform_svg_component;
 mod add_jsx_attribute;
 mod remove_jsx_attribute;
@@ -29,8 +26,28 @@ mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
 
-pub fn transform(code: String, config: core::config::Config, state: Option<core::state::Config>) -> Result<String, String> {
-    let state = core::state::expand_state(state.as_ref());
+pub use self::core::config::{Config, ExpandProps, Icon, JSXRuntime, JSXRuntimeImport, ExportType};
+pub use self::core::state::{Config as State, Caller};
+
+/// Transform SVG into React components.
+/// 
+/// It takes three arguments:
+/// 
+/// * source: the SVG source code to transform
+/// * options: the options used to transform the SVG
+/// * state: a state linked to the transformation
+/// 
+/// # Examples
+/// 
+/// Basic usage:
+/// 
+/// ```rust
+/// use svgr_rs::transform;
+/// 
+/// let result = transform(r#"<svg></svg>"#.to_string(), Default::default(), Default::default());
+/// ```
+pub fn transform(code: String, config: Config, state: State) -> Result<String, String> {
+    let state = core::state::expand_state(&state);
 
     let cm = Arc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon, code.to_string());
@@ -103,9 +120,7 @@ pub fn transform(code: String, config: core::config::Config, state: Option<core:
     let mut buf = vec![];
 
     let mut emitter = Emitter {
-        cfg: Config {
-            ..Default::default()
-        },
+        cfg: Default::default(),
         cm: cm.clone(),
         comments: None,
         wr: JsWriter::new(cm, "\n", &mut buf, None),
@@ -113,14 +128,4 @@ pub fn transform(code: String, config: core::config::Config, state: Option<core:
     emitter.emit_module(&m).unwrap();
 
     Ok(String::from_utf8_lossy(&buf).to_string())
-}
-
-#[cfg(feature = "node")]
-#[napi(js_name = "transform")]
-pub async fn node_transform(code: String, config: napi::bindgen_prelude::Buffer, state: Option<core::state::Config>) -> napi::bindgen_prelude::Result<String> {
-    let config: core::config::Config = get_deserialized(&config)?;
-    match transform(code, config, state) {
-        Ok(result) => napi::bindgen_prelude::Result::Ok(result),
-        Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(reason)),
-    }
 }

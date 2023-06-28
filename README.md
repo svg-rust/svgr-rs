@@ -4,6 +4,8 @@
 
 > ⚠️ RVGR RS is in early development and should not be used in production, expect bugs! 🐛
 
+If you are using SVGR RS from Rust, see [rustdoc](https://github.com/svg-rust/svgr-rs) and for most users.
+
 # Node.js
 
 Use SVGR RS in Node.js to complex transformations or tools.
