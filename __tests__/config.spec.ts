@@ -56,24 +56,22 @@ configs.forEach(async c => {
 	})
 })
 
-// it('titleProp: without title added', async () => {
-// 	const svg = `
-// 	<svg width="0" height="0" style="position:absolute">
-// <path d="M0 0h24v24H0z" fill="none" />
-// </svg>
-// `
-// 	expect(
-// 		await convertWithAllPlugins(svg, { titleProp: true }),
-// 	).toMatchSnapshot()
-// })
+test('titleProp: without title added', async t => {
+	const svg = `
+<svg width="0" height="0" style="position:absolute">
+	<path d="M0 0h24v24H0z" fill="none" />
+</svg>
+`
+	const result = await transform(svg, { titleProp: true })
+	t.snapshot(result)
+})
 
-// it('descProp: without desc added', async () => {
-// 	const svg = `
-// 	<svg width="0" height="0" style="position:absolute">
-// <path d="M0 0h24v24H0z" fill="none" />
-// </svg>
-// `
-// 	expect(
-// 		await convertWithAllPlugins(svg, { descProp: true }),
-// 	).toMatchSnapshot()
-// })
+test('descProp: without desc added', async t => {
+	const svg = `
+<svg width="0" height="0" style="position:absolute">
+	<path d="M0 0h24v24H0z" fill="none" />
+</svg>
+`
+	const result = await transform(svg, { descProp: true })
+	t.snapshot(result)
+})

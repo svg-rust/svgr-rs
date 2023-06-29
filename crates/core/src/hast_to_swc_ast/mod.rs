@@ -346,4 +346,12 @@ mod tests {
             r#"<svg><path style={{"--index":1,fontSize:24}}/><path style={{"--index":2}}/></svg>;"#
         );
     }
+
+    #[test]
+    fn transforms_class() {
+        code_test(
+            r#"<svg><path class="icon"/></svg>"#,
+            r#"<svg><path className="icon"/></svg>;"#
+        );
+    }
 }
