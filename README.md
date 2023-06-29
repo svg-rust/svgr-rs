@@ -4,7 +4,72 @@
 
 > ⚠️ RVGR RS is in early development and should not be used in production, expect bugs! 🐛
 
-If you are using SVGR RS from Rust, see [rustdoc](https://github.com/svg-rust/svgr-rs) and for most users.
+If you are using SVGR RS from Rust, see [rustdoc](https://docs.rs/svgr-rs/0.1.2/svgr_rs/) and for most users.
+
+# Webpack
+
+SVGR RS provides an [webpack](https://webpack.js.org/) loader to import SVG as React components.
+
+## Install
+
+```sh
+npm install --save-dev @svgr-rs/svgrs-plugin
+# or use yarn
+yarn add --dev @svgr-rs/core
+```
+
+## Usage
+
+webpack.config.js
+
+```js
+{
+  test: /\.svg$/i,
+  issuer: /\.[jt]sx?$/,
+  resourceQuery: /react/,
+  use: [
+    {
+      loader: '@svgr-rs/svgrs-plugin/webpack',
+      options: {
+        exportType: 'named',
+        namedExport: 'ReactComponent',
+      },
+    },
+  ],
+}
+```
+
+# Vite
+
+SVGR RS provides an [vite](https://vitejs.dev/) plugin to import SVG as React components.
+
+## Install
+
+```sh
+npm install --save-dev @svgr-rs/svgrs-plugin
+# or use yarn
+yarn add --dev @svgr-rs/core
+```
+
+## Usage
+
+vite.config.js
+
+```js
+import react from '@vitejs/plugin-react'
+import { svgrs } from '@svgr-rs/svgrs-plugin/vite'
+import { defineConfig } from 'vite'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    svgrs({
+      exportType: 'named',
+      namedExport: 'ReactComponent',
+    })
+  ],
+})
+```
 
 # Node.js
 
