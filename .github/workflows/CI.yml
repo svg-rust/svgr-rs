@@ -17,9 +17,38 @@ env:
       - docs/**
   pull_request: null
 jobs:
+  rust_check:
+    name: Rust check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: nightly-2023-06-27
+          target: x86_64-unknown-linux-gnu
+
+      - name: Run Cargo Check
+        run: cargo check --workspace --all-targets --locked # Not using --release because it uses too much cache, and is also slow.
+
+      - name: Run Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --workspace --all-targets -- -D warnings
+
+      - name: Run rustfmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
   cargo-test:
     name: Test cargo
     runs-on: ubuntu-latest
+    needs:
+      - rust_check
     steps:
       - uses: actions/checkout@v3
       - name: Install Rust
