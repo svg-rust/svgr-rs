@@ -28,7 +28,7 @@ impl Visitor {
         match icon {
             core::config::Icon::Str(s) => {
                 height = Some(Size::Str(s.clone()));
-                width = Some(Size::Str(s.clone()));
+                width = Some(Size::Str(s));
             },
             core::config::Icon::Num(n) => {
                 height = Some(Size::Num(n));
@@ -125,7 +125,7 @@ fn get_value(raw: Option<&Size>) -> JSXAttrValue {
                     JSXAttrValue::JSXExprContainer(JSXExprContainer {
                         expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Num(Number {
                             span: DUMMY_SP,
-                            value: num.clone(),
+                            value: *num,
                             raw: None,
                         })))),
                         span: DUMMY_SP,

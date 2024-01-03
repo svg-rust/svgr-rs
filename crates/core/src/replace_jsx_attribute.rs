@@ -31,7 +31,7 @@ impl VisitMut for Visitor {
                     let old_value = str.value.to_string();
 
                     if self.values.contains_key(&old_value) {
-                        let attr_value = get_attr_value(&self.values.get(&old_value).unwrap());
+                        let attr_value = get_attr_value(self.values.get(&old_value).unwrap());
                         jsx_attr.value = Some(attr_value);
                     }
                 }

@@ -4,7 +4,7 @@ use swc_core::{
     common::DUMMY_SP,
     ecma::{ast::*, atoms::JsWord}
 };
-use swc_xml::{visit::{Visit, VisitWith}};
+use swc_xml::visit::{Visit, VisitWith};
 use regex::{Regex, Captures};
 
 mod decode_xml;
@@ -55,7 +55,7 @@ fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
         })
     }
 
-    return JSXAttrValue::Lit(Lit::Str(Str {
+    JSXAttrValue::Lit(Lit::Str(Str {
         span: DUMMY_SP,
         value: replace_spaces(value).into(),
         raw: None
@@ -100,11 +100,7 @@ impl HastVisitor {
     fn element(&self, n: &swc_xml::ast::Element) -> JSXElement {
         let attrs = n.attributes.iter().map(
             |attr| {
-                let value = match attr.value.clone() {
-                    Some(v) => Some(get_value(&attr.name, &v)),
-                    None => None,
-                };
-    
+                let value = attr.value.clone().map(|v| get_value(&attr.name, &v));
                 JSXAttrOrSpread::JSXAttr(JSXAttr {
                     span: DUMMY_SP,
                     name: JSXAttrName::Ident(self.get_key(&attr.name, &n.tag_name)),
@@ -120,11 +116,11 @@ impl HastVisitor {
             span: DUMMY_SP,
             name: name.clone(),
             attrs,
-            self_closing: children.len() == 0,
+            self_closing: children.is_empty(),
             type_args: None,
         };
     
-        let closing = if children.len() > 0 {
+        let closing = if !children.is_empty() {
             Some(JSXClosingElement {
                 span: DUMMY_SP,
                 name,
@@ -141,17 +137,15 @@ impl HastVisitor {
         }
     }
 
-    fn all(&self, children: &Vec<swc_xml::ast::Child>) -> Vec<JSXElementChild> {
-        children.into_iter()
-            .map(|n| {
+    fn all(&self, children: &[swc_xml::ast::Child]) -> Vec<JSXElementChild> {
+        children.iter()
+            .filter_map(|n| {
                 match n {
-                    swc_xml::ast::Child::Element(e) => Some(JSXElementChild::JSXElement(Box::new(self.element(&e)))),
+                    swc_xml::ast::Child::Element(e) => Some(JSXElementChild::JSXElement(Box::new(self.element(e)))),
                     swc_xml::ast::Child::Text(t) => text(t),
                     _ => None,
                 }
             })
-            .filter(|n| n.is_some())
-            .map(|n| n.unwrap())
             .collect()
     }
 
@@ -194,7 +188,7 @@ impl HastVisitor {
             }
         }
     
-        let kebab_key = kebab_case(&attr_name);
+        let kebab_key = kebab_case(attr_name);
     
         if kebab_key.starts_with("aria-") {
             return Ident {
@@ -239,7 +233,7 @@ mod tests {
         common::{SourceMap, SourceFile, FileName},
         ecma::codegen::{text_writer::JsWriter, Emitter, Config},
     };
-    use swc_xml::parser::{parse_file_as_document, parser};
+    use swc_xml::parser::parse_file_as_document;
     use testing::NormalizedOutput;
 
     use super::*;
@@ -248,9 +242,7 @@ mod tests {
         let mut errors = vec![];
         let doc = parse_file_as_document(
             fm.borrow(),
-            parser::ParserConfig {
-                ..Default::default()
-            },
+            Default::default(),
             &mut errors
         ).unwrap();
 
@@ -290,7 +282,7 @@ mod tests {
 
         let res = transform(cm, fm, false);
 
-        NormalizedOutput::from(res).compare_to_file(&jsx_path).unwrap();
+        NormalizedOutput::from(res).compare_to_file(jsx_path).unwrap();
     }
 
     fn code_test(input: &str, expected: &str) {

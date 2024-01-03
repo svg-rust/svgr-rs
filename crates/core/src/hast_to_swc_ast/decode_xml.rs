@@ -70,12 +70,10 @@ pub fn decode_xml(s: &str) -> String {
         }
 
         // &amp;
-        if bytes.len() - cur_idx > 5 {
-            if s[cur_idx..cur_idx + 4].to_string() == "amp;" {
-                ret.push('&');
-                cur_idx += 4;
-                last_idx = cur_idx;
-            }
+        if bytes.len() - cur_idx > 5 && s[cur_idx..cur_idx + 4].to_string() == "amp;" {
+            ret.push('&');
+            cur_idx += 4;
+            last_idx = cur_idx;
         }
 
         // &apos;

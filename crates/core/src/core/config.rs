@@ -65,20 +65,15 @@ mod strings {
     named_unit_variant!(automatic);
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(untagged)]
 pub enum ExpandProps {
     Bool(bool),
     #[serde(with = "strings::start")]
     Start,
     #[serde(with = "strings::end")]
+    #[default]
     End
-}
-
-impl Default for ExpandProps {
-    fn default() -> Self {
-        ExpandProps::End
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

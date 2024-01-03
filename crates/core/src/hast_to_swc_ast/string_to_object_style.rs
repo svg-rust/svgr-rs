@@ -69,9 +69,9 @@ pub fn string_to_object_style(raw_style: &str) -> Expr {
     let entries = raw_style.split(';');
 
     let properties = entries.into_iter()
-        .map(|entry| {
+        .filter_map(|entry| {
             let style = entry.trim();
-            if style.len() == 0 {
+            if style.is_empty() {
                 return None;
             }
 
@@ -89,8 +89,6 @@ pub fn string_to_object_style(raw_style: &str) -> Expr {
                 None => None,
             }
         })
-        .filter(|p| p.is_some())
-        .map(|p| p.unwrap())
         .collect::<Vec<PropOrSpread>>();
 
     Expr::Object(ObjectLit {

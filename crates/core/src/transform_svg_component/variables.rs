@@ -16,15 +16,11 @@ pub struct TemplateVariables {
     pub jsx: JSXElement,
 }
 
+#[derive(Default)]
 pub enum JSXRuntime {
     Automatic,
+    #[default]
     Classic
-}
-
-impl Default for JSXRuntime {
-    fn default() -> Self {
-        JSXRuntime::Classic
-    }
 }
 
 pub enum ExpandProps {
@@ -33,15 +29,11 @@ pub enum ExpandProps {
     End,
 }
 
+#[derive(Default)]
 pub enum ExportType {
+    #[default]
     Default,
     Named,
-}
-
-impl Default for ExportType {
-    fn default() -> Self {
-        ExportType::Default
-    }
 }
 
 #[derive(Default)]
@@ -71,11 +63,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
 
     let mut export_identifier = state.component_name.clone();
 
-    let is_automatic = if let JSXRuntime::Automatic = opts.jsx_runtime {
-        true
-    } else {
-        false
-    };
+    let is_automatic = matches!(opts.jsx_runtime, JSXRuntime::Automatic);
     if !is_automatic {
         match opts.jsx_runtime_import {
             Some(jsx_runtime_import) => {
@@ -176,7 +164,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         _ => true
     };
     if need_expand_props {
-        let existing = if props.len() > 0 {
+        let existing = if !props.is_empty() {
             if let Pat::Object(ref mut object_pat) = props[0] {
                 let identifier = Pat::Ident(BindingIdent::from(Ident::new(
                     "props".into(),
@@ -238,7 +226,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
     }
 
     if opts._ref {
-        if props.len() == 0 {
+        if props.is_empty() {
             props.push(Pat::Ident(BindingIdent::from(Ident::new(
                 "_".into(),
                 DUMMY_SP
@@ -292,14 +280,10 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         export_identifier = "Memo".to_string();
     }
 
-    let need_named_export = if let Some(_) = &state.caller {
+    let need_named_export = if state.caller.is_some() {
         true
     } else {
-        if let ExportType::Named = opts.export_type {
-            true
-        } else {
-            false
-        }
+        matches!(opts.export_type, ExportType::Named)
     };
     if need_named_export {
         if let Some(named_export) = opts.named_export {
@@ -355,7 +339,7 @@ pub fn get_variables(opts: Options, state: &core::state::InternalConfig, jsx: JS
         exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(ExportDefaultExpr {
             span: DUMMY_SP,
             expr: Box::new(Expr::Ident(Ident::new(
-                export_identifier.clone().into(),
+                export_identifier.into(),
                 DUMMY_SP
             ))),
         })));
@@ -435,19 +419,11 @@ fn get_jsx_runtime_import_specifiers(cfg: &core::config::JSXRuntimeImport) -> Re
 fn get_or_create_import(imports: &mut Vec<ModuleItem>, soruce_value: &str, specifier: ImportSpecifier) {
     let mut existing = None;
     for import in imports.iter_mut() {
-        if let ModuleItem::ModuleDecl(module_decl) = import {
-            if let ModuleDecl::Import(import_decl) = module_decl {
-                let is_namespace_import = import_decl.specifiers.iter().any(|specifier| {
-                    if let ImportSpecifier::Namespace(_) = specifier {
-                        true
-                    } else {
-                        false
-                    }
-                });
-                if !is_namespace_import && import_decl.src.value.to_string() == soruce_value {
-                    existing = Some(import_decl);
-                    break;
-                }
+        if let ModuleItem::ModuleDecl(ModuleDecl::Import(import_decl)) = import {
+            let is_namespace_import = import_decl.specifiers.iter().any(|specifier| matches!(specifier, ImportSpecifier::Namespace(_)));
+            if !is_namespace_import && import_decl.src.value.to_string() == soruce_value {
+                existing = Some(import_decl);
+                break;
             }
         }
     }

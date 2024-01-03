@@ -86,7 +86,6 @@ impl VisitMut for SvgElementVisitor {
                     }
                 }
                 n.visit_mut_with(&mut jsx_element_visitor);
-                return;
             }
         }
     }
@@ -197,7 +196,7 @@ impl VisitMut for ImportDeclVisitor {
             for component in self.replaced_components.borrow().iter() {
                 if n.specifiers.iter().any(|specifier| {
                     if let ImportSpecifier::Named(named) = specifier {
-                        if named.local.sym.to_string() == component.to_string() {
+                        if named.local.sym == *component {
                             return true;
                         }
                     }

@@ -7,7 +7,7 @@
 extern crate napi_derive;
 
 use std::{sync::Arc, borrow::Borrow};
-use swc_xml::{parser::{parse_file_as_document, parser}};
+use swc_xml::parser::parse_file_as_document;
 use swc_core::{
     common::{SourceMap, FileName, comments::SingleThreadedComments},
     ecma::{
@@ -50,14 +50,12 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
     let state = core::state::expand_state(&state);
 
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, code.to_string());
+    let fm = cm.new_source_file(FileName::Anon, code);
 
     let mut errors = vec![];
     let document = parse_file_as_document(
         fm.borrow(),
-        parser::ParserConfig{
-            ..Default::default()
-        },
+        Default::default(),
         &mut errors
     ).unwrap();
 
@@ -67,11 +65,7 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
     }
     let jsx_element = jsx_element.unwrap();
 
-    let m = transform_svg_component::transform(jsx_element, &config, &state);
-    if m.is_err() {
-        return Err(m.unwrap_err());
-    }
-    let m = m.unwrap();
+    let m = transform_svg_component::transform(jsx_element, &config, &state)?;
 
     let m = m.fold_with(&mut as_folder(remove_jsx_attribute::Visitor::new(&config)));
     let m = m.fold_with(&mut as_folder(add_jsx_attribute::Visitor::new(&config)));

@@ -7,12 +7,6 @@ use swc_core::{
 };
 use super::core;
 
-pub enum AttributeValue {
-    Bool(bool),
-    Num(f64),
-    Str(String),
-}
-
 pub enum AttributePosition {
     Start,
     End,
@@ -21,7 +15,7 @@ pub enum AttributePosition {
 #[derive(Default)]
 pub struct Attribute {
     pub name: String,
-    pub value: Option<AttributeValue>,
+    pub value: Option<String>,
     pub spread: bool,
     pub literal: bool,
     pub position: Option<AttributePosition>,
@@ -43,40 +37,31 @@ impl Visitor {
             }
         }
 
-        let _ref = match config._ref {
-            Some(r) => r,
-            None => false
-        };
+        let _ref = config._ref.unwrap_or(false);
         if _ref {
             attributes.push(Attribute {
                 name: "ref".to_string(),
-                value: Some(AttributeValue::Str("ref".to_string())),
+                value: Some("ref".to_string()),
                 literal: true,
                 ..Default::default()
             });
         }
 
-        let title_prop = match config.title_prop {
-            Some(r) => r,
-            None => false
-        };
+        let title_prop = config.title_prop.unwrap_or(false);
         if title_prop {
             attributes.push(Attribute {
                 name: "aria-labelledby".to_string(),
-                value: Some(AttributeValue::Str("titleId".to_string())),
+                value: Some("titleId".to_string()),
                 literal: true,
                 ..Default::default()
             });
         }
 
-        let desc_prop = match config.desc_prop {
-            Some(r) => r,
-            None => false
-        };
+        let desc_prop = config.desc_prop.unwrap_or(false);
         if desc_prop {
             attributes.push(Attribute {
                 name: "aria-describedby".to_string(),
-                value: Some(AttributeValue::Str("descId".to_string())),
+                value: Some("descId".to_string()),
                 literal: true,
                 ..Default::default()
             });
@@ -131,20 +116,20 @@ impl VisitMut for Visitor {
                 None => &AttributePosition::End,
             };
 
-            let new_attr = get_attr(*spread, &name, value.as_ref(), *literal);
+            let new_attr = get_attr(*spread, name, value.as_ref(), *literal);
 
             let is_equal_attr = |attr: &JSXAttrOrSpread| -> bool {
                 if *spread {
                     if let JSXAttrOrSpread::SpreadElement(spread) = attr {
                         if let Expr::Ident(ident) = spread.expr.as_ref() {
-                            return ident.sym.to_string() == *name
+                            return ident.sym == *name
                         }
                     }
                     false
                 } else {
                     if let JSXAttrOrSpread::JSXAttr(attr) = attr {
                         if let JSXAttrName::Ident(ident) = &attr.name {
-                            return ident.sym.to_string() == *name
+                            return ident.sym == *name
                         }
                     }
                     false
@@ -173,7 +158,7 @@ impl VisitMut for Visitor {
     }
 }
 
-fn get_attr(spread: bool, name: &str, value: Option<&AttributeValue>, literal: bool) -> JSXAttrOrSpread {
+fn get_attr(spread: bool, name: &str, value: Option<&String>, literal: bool) -> JSXAttrOrSpread {
     if spread {
         JSXAttrOrSpread::SpreadElement(SpreadElement {
             dot3_token: DUMMY_SP,
@@ -197,47 +182,24 @@ fn get_attr(spread: bool, name: &str, value: Option<&AttributeValue>, literal: b
     }
 }
 
-fn get_attr_value(literal: bool, attr_value: Option<&AttributeValue>) -> Option<JSXAttrValue> {
+fn get_attr_value(literal: bool, attr_value: Option<&String>) -> Option<JSXAttrValue> {
     match attr_value {
         Some(value) => {
-            match value {
-                AttributeValue::Bool(value) => {
-                    Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-                        expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Bool(Bool {
-                            span: DUMMY_SP,
-                            value: value.clone(),
-                        })))),
+            if literal {
+                Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
+                    span: DUMMY_SP,
+                    expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident {
+                        sym: value.to_string().into(),
                         span: DUMMY_SP,
-                    }))
-                },
-                AttributeValue::Num(value) => {
-                    Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-                        expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Num(Number {
-                            span: DUMMY_SP,
-                            value: value.clone(),
-                            raw: None,
-                        })))),
-                        span: DUMMY_SP,
-                    }))
-                },
-                AttributeValue::Str(value) => {
-                    if literal {
-                        Some(JSXAttrValue::JSXExprContainer(JSXExprContainer {
-                            span: DUMMY_SP,
-                            expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident {
-                                sym: value.to_string().into(),
-                                span: DUMMY_SP,
-                                optional: false,
-                            }))),
-                        }))
-                    } else {
-                        Some(JSXAttrValue::Lit(Lit::Str(Str {
-                            span: DUMMY_SP,
-                            value: value.to_string().into(),
-                            raw: None,
-                        })))
-                    }
-                },
+                        optional: false,
+                    }))),
+                }))
+            } else {
+                Some(JSXAttrValue::Lit(Lit::Str(Str {
+                    span: DUMMY_SP,
+                    value: value.to_string().into(),
+                    raw: None,
+                })))
             }
         },
         None => None,
@@ -253,7 +215,7 @@ fn svg_prop_to_attr(key: &str, value: &str) -> Attribute {
     };
     Attribute {
         name: key.to_string(),
-        value: Some(AttributeValue::Str(str.to_string())),
+        value: Some(str.to_string()),
         literal,
         ..Default::default()
     }
@@ -336,20 +298,6 @@ mod tests {
 
     #[test]
     fn should_add_attribute_with_value() {
-        code_test(
-            r#"<div/>;"#,
-            Options {
-                elements: vec!["div".to_string()],
-                attributes: vec![
-                    Attribute {
-                        name: "disabled".to_string(),
-                        value: Some(AttributeValue::Bool(true)),
-                        ..Default::default()
-                    }
-                ],
-            },
-            r#"<div disabled={true}/>;"#,
-        );
 
         code_test(
             r#"<div/>;"#,
@@ -358,27 +306,12 @@ mod tests {
                 attributes: vec![
                     Attribute {
                         name: "disabled".to_string(),
-                        value: Some(AttributeValue::Str("true".to_string())),
+                        value: Some("true".to_string()),
                         ..Default::default()
                     }
                 ],
             },
             r#"<div disabled="true"/>;"#,
-        );
-
-        code_test(
-            r#"<div/>;"#,
-            Options {
-                elements: vec!["div".to_string()],
-                attributes: vec![
-                    Attribute {
-                        name: "disabled".to_string(),
-                        value: Some(AttributeValue::Num(200.0)),
-                        ..Default::default()
-                    }
-                ],
-            },
-            r#"<div disabled={200}/>;"#,
         );
     }
 
@@ -391,7 +324,7 @@ mod tests {
                 attributes: vec![
                     Attribute {
                         name: "ref".to_string(),
-                        value: Some(AttributeValue::Str("ref".to_string())),
+                        value: Some("ref".to_string()),
                         literal: true,
                         ..Default::default()
                     }
@@ -407,7 +340,7 @@ mod tests {
                 attributes: vec![
                     Attribute {
                         name: "ref".to_string(),
-                        value: Some(AttributeValue::Str("ref ? ref : null".to_string())),
+                        value: Some("ref ? ref : null".to_string()),
                         literal: true,
                         ..Default::default()
                     }
@@ -449,24 +382,6 @@ mod tests {
                 ],
             },
             r#"<div><span foo="bar" {...props}/></div>;"#,
-        );
-    }
-
-    #[test]
-    fn should_replace_attribute() {
-        code_test(
-            r#"<div disabled/>;"#,
-            Options {
-                elements: vec!["div".to_string()],
-                attributes: vec![
-                    Attribute {
-                        name: "disabled".to_string(),
-                        value: Some(AttributeValue::Bool(false)),
-                        ..Default::default()
-                    }
-                ],
-            },
-            r#"<div disabled={false}/>;"#,
         );
     }
 }

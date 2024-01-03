@@ -183,7 +183,7 @@ impl Visitor {
             jsx_attr_value
         };
 
-        if existing_title.children.len() == 0 {
+        if existing_title.children.is_empty() {
             return JSXElementChild::JSXExprContainer(JSXExprContainer {
                 span: DUMMY_SP,
                 expr: JSXExpr::Expr(Box::new(self.get_tag_expr(id_attr_value))),
@@ -213,7 +213,7 @@ impl VisitMut for Visitor {
             let has_tag = n.children.clone().iter_mut().enumerate().any(|(i, c)| {
                 if let JSXElementChild::JSXElement(e) = c {
                     if let JSXElementName::Ident(ident) = &e.opening.name {
-                        if ident.sym.to_string() == self.tag {
+                        if ident.sym == self.tag {
                             let tag_element = self.get_tag_element_with_existing_title(e);
                             n.children[i] = tag_element;
                             return true
