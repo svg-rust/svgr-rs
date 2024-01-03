@@ -32,6 +32,10 @@ jobs:
       - name: Run Cargo Check
         run: cargo check --workspace --all-targets --locked # Not using --release because it uses too much cache, and is also slow.
 
+      - name: Add Clippy
+        shell: bash
+        run: rustup component add clippy
+
       - name: Run Clippy
         uses: actions-rs/cargo@v1
         with:
