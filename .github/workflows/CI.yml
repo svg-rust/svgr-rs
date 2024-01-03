@@ -42,6 +42,10 @@ jobs:
           command: clippy
           args: --workspace --all-targets -- -D warnings
 
+      - name: Add rustfmt
+        shell: bash
+        run: rustup component add rustfmt
+
       - name: Run rustfmt
         uses: actions-rs/cargo@v1
         with:
