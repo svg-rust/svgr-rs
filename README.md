@@ -2,9 +2,7 @@
 
 <p align="center">Speedy SVGR rewritten in Rust 🦀</p>
 
-> ⚠️ RVGR RS is in early development and should not be used in production, expect bugs! 🐛
-
-If you are using SVGR RS from Rust, see [rustdoc](https://docs.rs/svgr-rs/0.1.2/svgr_rs/) and for most users.
+If you are using SVGR RS from Rust, see [rustdoc](https://docs.rs/svgr-rs/0.1.2/svgr_rs/) and for most uses.
 
 # Webpack
 
