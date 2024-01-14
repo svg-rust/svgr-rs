@@ -1,6 +1,6 @@
 use swc_core::{common::DUMMY_SP, ecma::ast::*};
 
-use crate::core;
+use crate::{core, SvgrError};
 
 mod variables;
 
@@ -71,7 +71,7 @@ pub fn transform(
   jsx_element: JSXElement,
   config: &core::config::Config,
   state: &core::state::InternalConfig,
-) -> Result<Module, String> {
+) -> Result<Module, SvgrError> {
   let variables_options = get_variables_options(config);
 
   let variables = variables::get_variables(variables_options, state, jsx_element)?;

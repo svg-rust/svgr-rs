@@ -18,6 +18,7 @@ use swc_xml::parser::parse_file_as_document;
 
 mod add_jsx_attribute;
 mod core;
+mod error;
 mod hast_to_swc_ast;
 mod remove_jsx_attribute;
 mod replace_jsx_attribute;
@@ -25,6 +26,8 @@ mod svg_dynamic_title;
 mod svg_em_dimensions;
 mod transform_react_native_svg;
 mod transform_svg_component;
+
+pub use error::SvgrError;
 
 pub use self::core::config::{Config, ExpandProps, ExportType, Icon, JSXRuntime, JSXRuntimeImport};
 pub use self::core::state::{Caller, Config as State};
@@ -50,18 +53,19 @@ pub use self::core::state::{Caller, Config as State};
 ///   Default::default(),
 /// );
 /// ```
-pub fn transform(code: String, config: Config, state: State) -> Result<String, String> {
+pub fn transform(code: String, config: Config, state: State) -> Result<String, SvgrError> {
   let state = core::state::expand_state(&state);
 
   let cm = Arc::<SourceMap>::default();
   let fm = cm.new_source_file(FileName::Anon, code);
 
   let mut errors = vec![];
-  let document = parse_file_as_document(fm.borrow(), Default::default(), &mut errors).unwrap();
+  let document = parse_file_as_document(fm.borrow(), Default::default(), &mut errors)
+    .map_err(|e| SvgrError::Parse(e.message().to_string()))?;
 
   let jsx_element = hast_to_swc_ast::to_swc_ast(document);
   if jsx_element.is_none() {
-    return Err("This is invalid SVG".to_string());
+    return Err(SvgrError::InvalidSvg);
   }
   let jsx_element = jsx_element.unwrap();
 

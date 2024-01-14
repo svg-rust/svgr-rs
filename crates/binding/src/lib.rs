@@ -20,8 +20,8 @@ pub async fn transform_node(
   };
   match transform(code, config, state) {
     Ok(result) => napi::bindgen_prelude::Result::Ok(result),
-    Err(reason) => {
-      napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(reason))
-    }
+    Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(
+      reason.to_string(),
+    )),
   }
 }

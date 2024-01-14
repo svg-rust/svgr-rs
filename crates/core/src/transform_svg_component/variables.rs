@@ -7,6 +7,7 @@ use swc_core::{
 };
 
 use super::core;
+use crate::SvgrError;
 
 pub struct TemplateVariables {
   pub component_name: String,
@@ -58,7 +59,7 @@ pub fn get_variables(
   opts: Options,
   state: &core::state::InternalConfig,
   jsx: JSXElement,
-) -> Result<TemplateVariables, String> {
+) -> Result<TemplateVariables, SvgrError> {
   let mut interfaces = vec![];
   let mut props = vec![];
   let mut imports = vec![];
@@ -313,7 +314,9 @@ pub fn get_variables(
         }
       }
     } else {
-      return Err(r#""namedExport" not specified"#.to_string());
+      return Err(SvgrError::Configuration(
+        r#""namedExport" not specified"#.to_string(),
+      ));
     }
   }
 
@@ -336,7 +339,7 @@ pub fn get_variables(
   })
 }
 
-fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<ModuleItem, String> {
+fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<ModuleItem, SvgrError> {
   let specifiers = get_jsx_runtime_import_specifiers(cfg)?;
 
   Ok(ModuleItem::ModuleDecl(ModuleDecl::Import(ImportDecl {
@@ -354,7 +357,7 @@ fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<Module
 
 fn get_jsx_runtime_import_specifiers(
   cfg: &core::config::JSXRuntimeImport,
-) -> Result<Vec<ImportSpecifier>, String> {
+) -> Result<Vec<ImportSpecifier>, SvgrError> {
   if let Some(namespace) = cfg.namespace.clone() {
     let specifier = ImportSpecifier::Namespace(ImportStarAsSpecifier {
       span: DUMMY_SP,
@@ -396,10 +399,10 @@ fn get_jsx_runtime_import_specifiers(
     return Ok(import_specifiers);
   }
 
-  Err(
+  Err(SvgrError::Configuration(
     r#"Specify "namespace", "defaultSpecifier", or "specifiers" in "jsxRuntimeImport" option"#
       .to_string(),
-  )
+  ))
 }
 
 fn get_or_create_import(
