@@ -831,7 +831,7 @@ export default SvgComponent;
 
   #[test]
   #[should_panic(
-    expected = r#"called `Result::unwrap()` on an `Err` value: "Specify \"namespace\", \"defaultSpecifier\", or \"specifiers\" in \"jsxRuntimeImport\" option"#
+    expected = r#"called `Result::unwrap()` on an `Err` value: Configuration("Specify \"namespace\", \"defaultSpecifier\", or \"specifiers\" in \"jsxRuntimeImport\" option")"#
   )]
   fn throws_with_invalid_configuration() {
     test_code(
