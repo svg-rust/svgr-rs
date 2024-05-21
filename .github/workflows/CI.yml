@@ -17,6 +17,20 @@ env:
       - docs/**
   pull_request: null
 jobs:
+
+  env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+      - name: Print ACTIONS_CACHE_URL
+        run: |
+          if [[ -n "${ACTIONS_CACHE_URL}" ]]; then
+            echo "exist"
+          else
+            echo "not exist"
+          fi
+
   rust_check:
     name: Rust check
     runs-on: ubuntu-latest
