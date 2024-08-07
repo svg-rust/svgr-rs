@@ -1,5 +1,6 @@
 [workspace]
 members = [
-  "crates/core",
-  "crates/binding"
+    "crates/core",
+    "crates/binding",
 ]
+resolver = "2"

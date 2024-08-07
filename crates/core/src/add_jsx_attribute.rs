@@ -1,3 +1,4 @@
+use swc_core::common::SyntaxContext;
 use swc_core::{
   common::DUMMY_SP,
   ecma::{ast::*, visit::VisitMut},
@@ -163,16 +164,16 @@ fn get_attr(spread: bool, name: &str, value: Option<&String>, literal: bool) -> 
       expr: Box::new(Expr::Ident(Ident {
         sym: name.to_string().into(),
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         optional: false,
       })),
     })
   } else {
     JSXAttrOrSpread::JSXAttr(JSXAttr {
       span: DUMMY_SP,
-      name: JSXAttrName::Ident(Ident {
+      name: JSXAttrName::Ident(IdentName {
         sym: name.to_string().into(),
         span: DUMMY_SP,
-        optional: false,
       }),
       value: get_attr_value(literal, value),
     })
@@ -188,6 +189,7 @@ fn get_attr_value(literal: bool, attr_value: Option<&String>) -> Option<JSXAttrV
           expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident {
             sym: value.to_string().into(),
             span: DUMMY_SP,
+            ctxt: SyntaxContext::empty(),
             optional: false,
           }))),
         }))
@@ -226,8 +228,8 @@ mod tests {
     common::{FileName, SourceMap},
     ecma::{
       ast::*,
-      codegen::{text_writer::JsWriter, Config, Emitter},
-      parser::{lexer::Lexer, EsConfig, Parser, StringInput, Syntax},
+      codegen::{text_writer::JsWriter, Emitter},
+      parser::{lexer::Lexer, EsSyntax, Parser, StringInput, Syntax},
       visit::{as_folder, FoldWith},
     },
   };
@@ -241,10 +243,10 @@ mod tests {
 
   fn code_test(input: &str, opts: Options, expected: &str) {
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
-      Syntax::Es(EsConfig {
+      Syntax::Es(EsSyntax {
         decorators: true,
         jsx: true,
         ..Default::default()
@@ -264,9 +266,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Config {
-        ..Default::default()
-      },
+      cfg: Default::default(),
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, "", &mut buf, None),

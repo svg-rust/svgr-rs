@@ -57,7 +57,7 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
   let state = core::state::expand_state(&state);
 
   let cm = Arc::<SourceMap>::default();
-  let fm = cm.new_source_file(FileName::Anon, code);
+  let fm = cm.new_source_file(FileName::Anon.into(), code);
 
   let mut errors = vec![];
   let document = parse_file_as_document(fm.borrow(), Default::default(), &mut errors)

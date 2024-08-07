@@ -1,5 +1,6 @@
 use std::{borrow::Borrow, sync::Arc};
 
+use swc_core::common::SyntaxContext;
 use swc_core::{
   common::DUMMY_SP,
   common::{FileName, SourceMap},
@@ -10,6 +11,7 @@ use super::core;
 use crate::SvgrError;
 
 pub struct TemplateVariables {
+  #[allow(dead_code)]
   pub component_name: String,
   pub interfaces: Vec<ModuleItem>,
   pub props: Vec<Pat>,
@@ -93,6 +95,7 @@ pub fn get_variables(
       span: DUMMY_SP,
       local: Ident {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         sym: "Svg".into(),
         optional: false,
       },
@@ -133,7 +136,7 @@ pub fn get_variables(
 
     if opts.typescript {
       let interface = ModuleItem::Stmt(Stmt::Decl(Decl::TsInterface(Box::new(TsInterfaceDecl {
-        id: Ident::new("SVGRProps".into(), DUMMY_SP),
+        id: Ident::new("SVGRProps".into(), DUMMY_SP, SyntaxContext::empty()),
         span: DUMMY_SP,
         declare: false,
         type_params: None,
@@ -149,7 +152,11 @@ pub fn get_variables(
         span: DUMMY_SP,
         type_ann: Box::new(TsType::TsTypeRef(TsTypeRef {
           span: DUMMY_SP,
-          type_name: TsEntityName::Ident(Ident::new("SVGRProps".into(), DUMMY_SP)),
+          type_name: TsEntityName::Ident(Ident::new(
+            "SVGRProps".into(),
+            DUMMY_SP,
+            SyntaxContext::empty(),
+          )),
           type_params: None,
         })),
       }));
@@ -166,7 +173,11 @@ pub fn get_variables(
   if need_expand_props {
     let existing = if !props.is_empty() {
       if let Pat::Object(ref mut object_pat) = props[0] {
-        let identifier = Pat::Ident(BindingIdent::from(Ident::new("props".into(), DUMMY_SP)));
+        let identifier = Pat::Ident(BindingIdent::from(Ident::new(
+          "props".into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        )));
         object_pat.props.push(ObjectPatProp::Rest(RestPat {
           span: DUMMY_SP,
           dot3_token: DUMMY_SP,
@@ -184,7 +195,11 @@ pub fn get_variables(
                 svg_props_type,
                 Box::new(TsType::TsTypeRef(TsTypeRef {
                   span: DUMMY_SP,
-                  type_name: TsEntityName::Ident(Ident::new("SVGRProps".into(), DUMMY_SP)),
+                  type_name: TsEntityName::Ident(Ident::new(
+                    "SVGRProps".into(),
+                    DUMMY_SP,
+                    SyntaxContext::empty(),
+                  )),
                   type_params: None,
                 })),
               ],
@@ -205,7 +220,8 @@ pub fn get_variables(
     };
 
     if !existing {
-      let mut prop = BindingIdent::from(Ident::new("props".into(), DUMMY_SP));
+      let mut prop =
+        BindingIdent::from(Ident::new("props".into(), DUMMY_SP, SyntaxContext::empty()));
 
       if opts.typescript {
         let type_ann = ts_type_reference_svg_props(&mut imports, opts.native, &import_source);
@@ -224,9 +240,10 @@ pub fn get_variables(
       props.push(Pat::Ident(BindingIdent::from(Ident::new(
         "_".into(),
         DUMMY_SP,
+        SyntaxContext::empty(),
       ))));
     }
-    let mut prop = BindingIdent::from(Ident::new("ref".into(), DUMMY_SP));
+    let mut prop = BindingIdent::from(Ident::new("ref".into(), DUMMY_SP, SyntaxContext::empty()));
 
     if opts.typescript {
       get_or_create_named_import(&mut imports, "react", "Ref");
@@ -235,12 +252,20 @@ pub fn get_variables(
         span: DUMMY_SP,
         type_ann: Box::new(TsType::TsTypeRef(TsTypeRef {
           span: DUMMY_SP,
-          type_name: TsEntityName::Ident(Ident::new("Ref".into(), DUMMY_SP)),
+          type_name: TsEntityName::Ident(Ident::new(
+            "Ref".into(),
+            DUMMY_SP,
+            SyntaxContext::empty(),
+          )),
           type_params: Some(Box::new(TsTypeParamInstantiation {
             span: DUMMY_SP,
             params: vec![Box::new(TsType::TsTypeRef(TsTypeRef {
               span: DUMMY_SP,
-              type_name: TsEntityName::Ident(Ident::new("SVGSVGElement".into(), DUMMY_SP)),
+              type_name: TsEntityName::Ident(Ident::new(
+                "SVGSVGElement".into(),
+                DUMMY_SP,
+                SyntaxContext::empty(),
+              )),
               type_params: None,
             }))],
           })),
@@ -272,9 +297,14 @@ pub fn get_variables(
     if let Some(named_export) = opts.named_export {
       let specifier = ExportSpecifier::Named(ExportNamedSpecifier {
         span: DUMMY_SP,
-        orig: ModuleExportName::Ident(Ident::new(export_identifier.clone().into(), DUMMY_SP)),
+        orig: ModuleExportName::Ident(Ident::new(
+          export_identifier.clone().into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        )),
         exported: Some(ModuleExportName::Ident(Ident {
           span: DUMMY_SP,
+          ctxt: SyntaxContext::empty(),
           sym: named_export.into(),
           optional: false,
         })),
@@ -287,19 +317,19 @@ pub fn get_variables(
           specifiers: vec![specifier],
           src: None,
           type_only: false,
-          asserts: None,
+          with: None,
         },
       )));
 
       if let Some(caller) = &state.caller {
         if let Some(previous_export) = caller.previous_export.clone() {
           let cm = Arc::<SourceMap>::default();
-          let fm = cm.new_source_file(FileName::Anon, previous_export);
+          let fm = cm.new_source_file(FileName::Anon.into(), previous_export);
 
           let mut recovered_errors = vec![];
           let module = parser::parse_file_as_module(
             fm.borrow(),
-            parser::Syntax::Es(parser::EsConfig {
+            parser::Syntax::Es(parser::EsSyntax {
               jsx: true,
               ..Default::default()
             }),
@@ -324,7 +354,11 @@ pub fn get_variables(
     exports.push(ModuleItem::ModuleDecl(ModuleDecl::ExportDefaultExpr(
       ExportDefaultExpr {
         span: DUMMY_SP,
-        expr: Box::new(Expr::Ident(Ident::new(export_identifier.into(), DUMMY_SP))),
+        expr: Box::new(Expr::Ident(Ident::new(
+          export_identifier.into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        ))),
       },
     )));
   }
@@ -351,7 +385,8 @@ fn get_jsx_runtime_import(cfg: &core::config::JSXRuntimeImport) -> Result<Module
       raw: None,
     }),
     type_only: false,
-    asserts: None,
+    with: None,
+    phase: Default::default(),
   })))
 }
 
@@ -363,6 +398,7 @@ fn get_jsx_runtime_import_specifiers(
       span: DUMMY_SP,
       local: Ident {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         sym: namespace.into(),
         optional: false,
       },
@@ -375,6 +411,7 @@ fn get_jsx_runtime_import_specifiers(
       span: DUMMY_SP,
       local: Ident {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         sym: default_specifier.into(),
         optional: false,
       },
@@ -388,7 +425,7 @@ fn get_jsx_runtime_import_specifiers(
       import_specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
         span: DUMMY_SP,
         local: Ident {
-          span: DUMMY_SP,
+          span: DUMMY_SP,ctxt:  SyntaxContext::empty(),
           sym: specifier.into(),
           optional: false,
         },
@@ -438,7 +475,8 @@ fn get_or_create_import(
       raw: None,
     }),
     type_only: false,
-    asserts: None,
+    with: None,
+    phase: Default::default(),
   }));
   imports.push(module_item);
 }
@@ -447,7 +485,7 @@ fn get_or_create_named_import(imports: &mut Vec<ModuleItem>, soruce_value: &str,
   let specifier = ImportSpecifier::Named(ImportNamedSpecifier {
     span: DUMMY_SP,
     local: Ident {
-      span: DUMMY_SP,
+      span: DUMMY_SP, ctxt:  SyntaxContext::empty(),
       sym: name.into(),
       optional: false,
     },
@@ -459,19 +497,19 @@ fn get_or_create_named_import(imports: &mut Vec<ModuleItem>, soruce_value: &str,
 
 fn create_var_decl_init_hoc(var_name: &str, callee: &str, component_name: &str) -> ModuleItem {
   ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
-    span: DUMMY_SP,
+    span: DUMMY_SP, ctxt: SyntaxContext::empty(),
     kind: VarDeclKind::Const,
     declare: false,
     decls: vec![VarDeclarator {
       span: DUMMY_SP,
-      name: Pat::Ident(BindingIdent::from(Ident::new(var_name.into(), DUMMY_SP))),
+      name: Pat::Ident(BindingIdent::from(Ident::new(var_name.into(), DUMMY_SP,  SyntaxContext::empty(),))),
       definite: false,
       init: Some(Box::new(Expr::Call(CallExpr {
-        span: DUMMY_SP,
-        callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(callee.into(), DUMMY_SP)))),
+        span: DUMMY_SP, ctxt:  SyntaxContext::empty(),
+        callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(callee.into(), DUMMY_SP,  SyntaxContext::empty(),)))),
         args: vec![ExprOrSpread {
           spread: None,
-          expr: Box::new(Expr::Ident(Ident::new(component_name.into(), DUMMY_SP))),
+          expr: Box::new(Expr::Ident(Ident::new(component_name.into(), DUMMY_SP,  SyntaxContext::empty(),))),
         }],
         type_args: None,
       }))),
@@ -482,7 +520,7 @@ fn create_var_decl_init_hoc(var_name: &str, callee: &str, component_name: &str) 
 fn create_property(key: &str) -> ObjectPatProp {
   ObjectPatProp::Assign(AssignPatProp {
     span: DUMMY_SP,
-    key: Ident::new(key.into(), DUMMY_SP),
+    key: Ident::new(key.into(), DUMMY_SP, SyntaxContext::empty()).into(),
     value: None,
   })
 }
@@ -491,11 +529,13 @@ fn create_signature(key: &str) -> TsTypeElement {
   TsTypeElement::TsPropertySignature(TsPropertySignature {
     span: DUMMY_SP,
     readonly: false,
-    key: Box::new(Expr::Ident(Ident::new(key.into(), DUMMY_SP))),
+    key: Box::new(Expr::Ident(Ident::new(
+      key.into(),
+      DUMMY_SP,
+      SyntaxContext::empty(),
+    ))),
     computed: false,
     optional: true,
-    init: None,
-    params: vec![],
     type_ann: Some(Box::new(TsTypeAnn {
       span: DUMMY_SP,
       type_ann: Box::new(TsType::TsKeywordType(TsKeywordType {
@@ -503,7 +543,6 @@ fn create_signature(key: &str) -> TsTypeElement {
         kind: TsKeywordTypeKind::TsStringKeyword,
       })),
     })),
-    type_params: None,
   })
 }
 
@@ -517,7 +556,11 @@ fn ts_type_reference_svg_props(
 
     return Box::new(TsType::TsTypeRef(TsTypeRef {
       span: DUMMY_SP,
-      type_name: TsEntityName::Ident(Ident::new("SvgProps".into(), DUMMY_SP)),
+      type_name: TsEntityName::Ident(Ident::new(
+        "SvgProps".into(),
+        DUMMY_SP,
+        SyntaxContext::empty(),
+      )),
       type_params: None,
     }));
   }
@@ -526,12 +569,20 @@ fn ts_type_reference_svg_props(
 
   Box::new(TsType::TsTypeRef(TsTypeRef {
     span: DUMMY_SP,
-    type_name: TsEntityName::Ident(Ident::new("SVGProps".into(), DUMMY_SP)),
+    type_name: TsEntityName::Ident(Ident::new(
+      "SVGProps".into(),
+      DUMMY_SP,
+      SyntaxContext::empty(),
+    )),
     type_params: Some(Box::new(TsTypeParamInstantiation {
       span: DUMMY_SP,
       params: vec![Box::new(TsType::TsTypeRef(TsTypeRef {
         span: DUMMY_SP,
-        type_name: TsEntityName::Ident(Ident::new("SVGSVGElement".into(), DUMMY_SP)),
+        type_name: TsEntityName::Ident(Ident::new(
+          "SVGSVGElement".into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        )),
         type_params: None,
       }))],
     })),

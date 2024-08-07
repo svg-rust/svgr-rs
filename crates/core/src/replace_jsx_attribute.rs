@@ -3,7 +3,7 @@ use swc_core::{
   common::DUMMY_SP,
   ecma::{ast::*, visit::VisitMut},
 };
-
+use swc_core::common::SyntaxContext;
 use super::core;
 
 pub struct Visitor {
@@ -47,6 +47,7 @@ fn get_attr_value(new: &str) -> JSXAttrValue {
       expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident {
         sym: s.to_string().into(),
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         optional: false,
       }))),
     })
@@ -67,8 +68,8 @@ mod tests {
     common::{FileName, SourceMap},
     ecma::{
       ast::*,
-      codegen::{text_writer::JsWriter, Config, Emitter},
-      parser::{lexer::Lexer, EsConfig, Parser, StringInput, Syntax},
+      codegen::{text_writer::JsWriter, Emitter},
+      parser::{lexer::Lexer, EsSyntax, Parser, StringInput, Syntax},
       visit::{as_folder, FoldWith},
     },
   };
@@ -77,10 +78,10 @@ mod tests {
 
   fn code_test(input: &str, replace_attr_values: LinkedHashMap<String, String>, expected: &str) {
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
-      Syntax::Es(EsConfig {
+      Syntax::Es(EsSyntax {
         decorators: true,
         jsx: true,
         ..Default::default()
@@ -100,9 +101,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Config {
-        ..Default::default()
-      },
+      cfg: Default::default(),
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, "", &mut buf, None),

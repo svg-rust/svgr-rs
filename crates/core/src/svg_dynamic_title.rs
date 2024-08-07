@@ -1,3 +1,4 @@
+use swc_core::common::SyntaxContext;
 use swc_core::{
   common::DUMMY_SP,
   ecma::{ast::*, visit::VisitMut},
@@ -22,10 +23,14 @@ impl Visitor {
       span: DUMMY_SP,
       opening: JSXOpeningElement {
         span: DUMMY_SP,
-        name: JSXElementName::Ident(Ident::new(self.tag.clone().into(), DUMMY_SP)),
+        name: JSXElementName::Ident(Ident::new(
+          self.tag.clone().into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        )),
         attrs: vec![JSXAttrOrSpread::JSXAttr(JSXAttr {
           span: DUMMY_SP,
-          name: JSXAttrName::Ident(Ident::new("id".to_string().into(), DUMMY_SP)),
+          name: JSXAttrName::Ident(IdentName::new("id".to_string().into(), DUMMY_SP)),
           value: Some(value),
         })],
         self_closing: false,
@@ -36,17 +41,26 @@ impl Visitor {
         expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::new(
           self.tag.clone().into(),
           DUMMY_SP,
+          SyntaxContext::empty(),
         )))),
       })],
       closing: Some(JSXClosingElement {
         span: DUMMY_SP,
-        name: JSXElementName::Ident(Ident::new(self.tag.clone().into(), DUMMY_SP)),
+        name: JSXElementName::Ident(Ident::new(
+          self.tag.clone().into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        )),
       }),
     })));
 
     Expr::Cond(CondExpr {
       span: DUMMY_SP,
-      test: Box::new(Expr::Ident(Ident::new(self.tag.clone().into(), DUMMY_SP))),
+      test: Box::new(Expr::Ident(Ident::new(
+        self.tag.clone().into(),
+        DUMMY_SP,
+        SyntaxContext::empty(),
+      ))),
       cons,
       alt: Box::new(Expr::Lit(Lit::Null(Null { span: DUMMY_SP }))),
     })
@@ -58,6 +72,7 @@ impl Visitor {
       expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::new(
         self.tag_id.clone().into(),
         DUMMY_SP,
+        SyntaxContext::empty(),
       )))),
     });
 
@@ -75,9 +90,17 @@ impl Visitor {
   ) -> JSXElementChild {
     let test = Expr::Bin(BinExpr {
       span: DUMMY_SP,
-      left: Box::new(Expr::Ident(Ident::new(self.tag.clone().into(), DUMMY_SP))),
+      left: Box::new(Expr::Ident(Ident::new(
+        self.tag.clone().into(),
+        DUMMY_SP,
+        SyntaxContext::empty(),
+      ))),
       op: op!("==="),
-      right: Box::new(Expr::Ident(Ident::new("undefined".into(), DUMMY_SP))),
+      right: Box::new(Expr::Ident(Ident::new(
+        "undefined".into(),
+        DUMMY_SP,
+        SyntaxContext::empty(),
+      ))),
     });
 
     let existing_id = existing_title.opening.attrs.iter_mut().find(|attr| {
@@ -103,6 +126,7 @@ impl Visitor {
               left: Box::new(Expr::Ident(Ident::new(
                 self.tag_id.clone().into(),
                 DUMMY_SP,
+                SyntaxContext::empty(),
               ))),
               op: op!("||"),
               right: Box::new(Expr::Lit(Lit::Str(Str {
@@ -118,6 +142,7 @@ impl Visitor {
           expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::new(
             self.tag_id.clone().into(),
             DUMMY_SP,
+            SyntaxContext::empty(),
           )))),
         }),
       };
@@ -131,12 +156,13 @@ impl Visitor {
         expr: JSXExpr::Expr(Box::new(Expr::Ident(Ident::new(
           self.tag_id.clone().into(),
           DUMMY_SP,
+          SyntaxContext::empty(),
         )))),
       });
 
       let id_attr = JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
-        name: JSXAttrName::Ident(Ident::new("id".into(), DUMMY_SP)),
+        name: JSXAttrName::Ident(IdentName::new("id".into(), DUMMY_SP)),
         value: Some(jsx_attr_value.clone()),
       });
       existing_title.opening.attrs.push(id_attr);
@@ -199,8 +225,8 @@ mod tests {
     common::{FileName, SourceMap},
     ecma::{
       ast::*,
-      codegen::{text_writer::JsWriter, Config, Emitter},
-      parser::{lexer::Lexer, EsConfig, Parser, StringInput, Syntax},
+      codegen::{text_writer::JsWriter, Emitter},
+      parser::{lexer::Lexer, EsSyntax, Parser, StringInput, Syntax},
       visit::{as_folder, FoldWith},
     },
   };
@@ -209,10 +235,10 @@ mod tests {
 
   fn code_test(input: &str, tag: String, expected: &str) {
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
-      Syntax::Es(EsConfig {
+      Syntax::Es(EsSyntax {
         decorators: true,
         jsx: true,
         ..Default::default()
@@ -229,9 +255,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Config {
-        ..Default::default()
-      },
+      cfg: Default::default() ,
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, "", &mut buf, None),
