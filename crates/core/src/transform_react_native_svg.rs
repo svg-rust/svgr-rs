@@ -85,7 +85,7 @@ impl SvgElementVisitor {
 impl VisitMut for SvgElementVisitor {
   fn visit_mut_jsx_element(&mut self, n: &mut JSXElement) {
     if let JSXElementName::Ident(ident) = &mut n.opening.name {
-      if ident.sym.to_string() == "svg" {
+      if ident.sym.as_str() == "svg" {
         let mut jsx_element_visitor = JSXElementVisitor::new(
           self.replaced_components.clone(),
           self.unsupported_components.clone(),
@@ -206,7 +206,7 @@ impl ImportDeclVisitor {
 
 impl VisitMut for ImportDeclVisitor {
   fn visit_mut_import_decl(&mut self, n: &mut ImportDecl) {
-    if n.src.value.to_string() == "react-native-svg" {
+    if n.src.value.as_str() == "react-native-svg" {
       for component in self.replaced_components.borrow().iter() {
         if n.specifiers.iter().any(|specifier| {
           if let ImportSpecifier::Named(named) = specifier {
@@ -233,7 +233,7 @@ impl VisitMut for ImportDeclVisitor {
       }
 
       self.import_decl_span = Some(n.span);
-    } else if n.src.value.to_string() == "expo" {
+    } else if n.src.value.as_str() == "expo" {
       n.specifiers
         .push(ImportSpecifier::Named(ImportNamedSpecifier {
           local: Ident::new("Svg".into(), DUMMY_SP, SyntaxContext::empty()),

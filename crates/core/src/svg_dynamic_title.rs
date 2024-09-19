@@ -109,7 +109,7 @@ impl Visitor {
         ..
       }) = attr
       {
-        if ident.sym.to_string() == "id" {
+        if ident.sym.as_str() == "id" {
           return true;
         }
       }
@@ -255,7 +255,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Default::default() ,
+      cfg: Default::default(),
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, "", &mut buf, None),

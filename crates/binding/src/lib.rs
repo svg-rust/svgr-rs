@@ -14,10 +14,7 @@ pub async fn transform_node(
   state: Option<State>,
 ) -> napi::bindgen_prelude::Result<String> {
   let config: Config = get_deserialized(&config)?;
-  let state = match state {
-    Some(state) => state,
-    None => Default::default(),
-  };
+  let state = state.unwrap_or_default();
   match transform(code, config, state) {
     Ok(result) => napi::bindgen_prelude::Result::Ok(result),
     Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(

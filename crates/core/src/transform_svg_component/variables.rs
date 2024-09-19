@@ -425,7 +425,8 @@ fn get_jsx_runtime_import_specifiers(
       import_specifiers.push(ImportSpecifier::Named(ImportNamedSpecifier {
         span: DUMMY_SP,
         local: Ident {
-          span: DUMMY_SP,ctxt:  SyntaxContext::empty(),
+          span: DUMMY_SP,
+          ctxt: SyntaxContext::empty(),
           sym: specifier.into(),
           optional: false,
         },
@@ -454,7 +455,7 @@ fn get_or_create_import(
         .specifiers
         .iter()
         .any(|specifier| matches!(specifier, ImportSpecifier::Namespace(_)));
-      if !is_namespace_import && import_decl.src.value.to_string() == soruce_value {
+      if !is_namespace_import && import_decl.src.value.as_str() == soruce_value {
         existing = Some(import_decl);
         break;
       }
@@ -485,7 +486,8 @@ fn get_or_create_named_import(imports: &mut Vec<ModuleItem>, soruce_value: &str,
   let specifier = ImportSpecifier::Named(ImportNamedSpecifier {
     span: DUMMY_SP,
     local: Ident {
-      span: DUMMY_SP, ctxt:  SyntaxContext::empty(),
+      span: DUMMY_SP,
+      ctxt: SyntaxContext::empty(),
       sym: name.into(),
       optional: false,
     },
@@ -497,19 +499,33 @@ fn get_or_create_named_import(imports: &mut Vec<ModuleItem>, soruce_value: &str,
 
 fn create_var_decl_init_hoc(var_name: &str, callee: &str, component_name: &str) -> ModuleItem {
   ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
-    span: DUMMY_SP, ctxt: SyntaxContext::empty(),
+    span: DUMMY_SP,
+    ctxt: SyntaxContext::empty(),
     kind: VarDeclKind::Const,
     declare: false,
     decls: vec![VarDeclarator {
       span: DUMMY_SP,
-      name: Pat::Ident(BindingIdent::from(Ident::new(var_name.into(), DUMMY_SP,  SyntaxContext::empty(),))),
+      name: Pat::Ident(BindingIdent::from(Ident::new(
+        var_name.into(),
+        DUMMY_SP,
+        SyntaxContext::empty(),
+      ))),
       definite: false,
       init: Some(Box::new(Expr::Call(CallExpr {
-        span: DUMMY_SP, ctxt:  SyntaxContext::empty(),
-        callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(callee.into(), DUMMY_SP,  SyntaxContext::empty(),)))),
+        span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
+        callee: Callee::Expr(Box::new(Expr::Ident(Ident::new(
+          callee.into(),
+          DUMMY_SP,
+          SyntaxContext::empty(),
+        )))),
         args: vec![ExprOrSpread {
           spread: None,
-          expr: Box::new(Expr::Ident(Ident::new(component_name.into(), DUMMY_SP,  SyntaxContext::empty(),))),
+          expr: Box::new(Expr::Ident(Ident::new(
+            component_name.into(),
+            DUMMY_SP,
+            SyntaxContext::empty(),
+          ))),
         }],
         type_args: None,
       }))),
