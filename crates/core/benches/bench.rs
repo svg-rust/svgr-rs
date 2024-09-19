@@ -7,7 +7,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
   let path = "benches/rspack-logo.svg";
   let rspack_logo = fs::read_to_string(path).unwrap();
   c.bench_function("Rspack logo", |b| {
-    b.iter(|| transform(rspack_logo.to_string(), Default::default(), Default::default()))
+    b.iter(|| {
+      transform(
+        rspack_logo.to_string(),
+        Default::default(),
+        Default::default(),
+      )
+    })
   });
 }
 
