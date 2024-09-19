@@ -55,7 +55,7 @@ impl VisitMut for Visitor {
   fn visit_mut_jsx_opening_element(&mut self, n: &mut JSXOpeningElement) {
     let is_svg = ELEMENTS.iter().any(|element| {
       if let JSXElementName::Ident(ident) = n.name.clone() {
-        return ident.sym.to_string() == *element;
+        return ident.sym.as_str() == *element;
       }
       false
     });
@@ -74,7 +74,7 @@ impl VisitMut for Visitor {
             .iter()
             .enumerate()
             .for_each(|(index, attr)| {
-              if ident.sym.to_string() == *attr {
+              if ident.sym.as_str() == *attr {
                 match *attr {
                   "height" => {
                     jsx_attr.value.replace(get_value(self.height.as_ref()));

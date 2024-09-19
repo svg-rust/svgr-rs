@@ -109,7 +109,7 @@ impl Visitor {
         ..
       }) = attr
       {
-        if ident.sym.to_string() == "id" {
+        if ident.sym.as_str() == "id" {
           return true;
         }
       }

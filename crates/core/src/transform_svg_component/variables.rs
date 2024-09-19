@@ -455,7 +455,7 @@ fn get_or_create_import(
         .specifiers
         .iter()
         .any(|specifier| matches!(specifier, ImportSpecifier::Namespace(_)));
-      if !is_namespace_import && import_decl.src.value.to_string() == soruce_value {
+      if !is_namespace_import && import_decl.src.value.as_str() == soruce_value {
         existing = Some(import_decl);
         break;
       }

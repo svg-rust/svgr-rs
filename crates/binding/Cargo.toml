@@ -19,6 +19,3 @@ svgr-rs = { path = "../core", features = ["node"] }
 
 [build-dependencies]
 napi-build = "2.0.1"
-
-[profile.release]
-lto = true

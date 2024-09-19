@@ -38,9 +38,6 @@ linked_hash_set = "0.1.4"
 codspeed-criterion-compat = "2.7.2"
 testing = "0.32.5"
 
-[profile.release]
-lto = true
-
 [[bench]]
 name = "bench"
 harness = false
