@@ -255,7 +255,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Default::default() ,
+      cfg: Default::default(),
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, "", &mut buf, None),

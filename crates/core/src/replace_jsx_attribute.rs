@@ -1,9 +1,10 @@
 use linked_hash_map::LinkedHashMap;
+use swc_core::common::SyntaxContext;
 use swc_core::{
   common::DUMMY_SP,
   ecma::{ast::*, visit::VisitMut},
 };
-use swc_core::common::SyntaxContext;
+
 use super::core;
 
 pub struct Visitor {
