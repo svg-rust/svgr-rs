@@ -3,7 +3,7 @@ env:
   DEBUG: napi:*
   APP_NAME: svgr-rs
   MACOSX_DEPLOYMENT_TARGET: '10.13'
-'on':
+on:
   push:
     branches:
       - main
@@ -15,7 +15,9 @@ env:
       - '**/*.gitignore'
       - .editorconfig
       - docs/**
-  pull_request: null
+  pull_request:
+    types: [opened, synchronize]
+
 jobs:
   rust_check:
     name: Rust check
