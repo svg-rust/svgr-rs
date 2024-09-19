@@ -1,6 +1,7 @@
 use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use linked_hash_set::LinkedHashSet;
+use swc_core::common::SyntaxContext;
 use swc_core::{
   common::{
     comments::{Comment, CommentKind, Comments},
@@ -220,7 +221,11 @@ impl VisitMut for ImportDeclVisitor {
 
         n.specifiers
           .push(ImportSpecifier::Named(ImportNamedSpecifier {
-            local: Ident::new(JsWord::from(component.as_str()), DUMMY_SP),
+            local: Ident::new(
+              JsWord::from(component.as_str()),
+              DUMMY_SP,
+              SyntaxContext::empty(),
+            ),
             imported: None,
             span: DUMMY_SP,
             is_type_only: false,
@@ -231,7 +236,7 @@ impl VisitMut for ImportDeclVisitor {
     } else if n.src.value.to_string() == "expo" {
       n.specifiers
         .push(ImportSpecifier::Named(ImportNamedSpecifier {
-          local: Ident::new("Svg".into(), DUMMY_SP),
+          local: Ident::new("Svg".into(), DUMMY_SP, SyntaxContext::empty()),
           imported: None,
           span: DUMMY_SP,
           is_type_only: false,
@@ -250,8 +255,8 @@ mod tests {
     common::{comments::SingleThreadedComments, FileName, SourceMap},
     ecma::{
       ast::*,
-      codegen::{text_writer::JsWriter, Config, Emitter},
-      parser::{lexer::Lexer, EsConfig, Parser, StringInput, Syntax},
+      codegen::{text_writer::JsWriter, Emitter},
+      parser::{lexer::Lexer, EsSyntax, Parser, StringInput, Syntax},
       visit::{as_folder, FoldWith},
     },
   };
@@ -260,10 +265,10 @@ mod tests {
 
   fn code_test(input: &str, expected: &str) {
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
-      Syntax::Es(EsConfig {
+      Syntax::Es(EsSyntax {
         decorators: true,
         jsx: true,
         ..Default::default()
@@ -281,9 +286,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Config {
-        ..Default::default()
-      },
+      cfg: Default::default(),
       cm: cm.clone(),
       comments: Some(&comments),
       wr: JsWriter::new(cm, "", &mut buf, None),

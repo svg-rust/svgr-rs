@@ -6,6 +6,7 @@
 export interface TransformOutput {
   code: string
   map?: string
+  output?: string
 }
 export interface Caller {
   name?: string
@@ -24,4 +25,4 @@ export interface State {
    */
   caller?: Caller
 }
-export function transform(code: string, config: Buffer, state?: State | undefined | null): Promise<string>
+export declare function transform(code: string, config: Buffer, state?: State | undefined | null): Promise<string>

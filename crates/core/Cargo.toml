@@ -18,8 +18,8 @@ napi-derive = { version = "2.12.2", optional = true }
 clap = { version = "4.2.0", features = ["derive"] }
 regex = "1.7.3"
 serde = { version = "1", features = ["derive"] }
-swc_xml = "0.10.3"
-swc_core = { version = "0.74.2", features = [
+swc_xml = "0.17.0"
+swc_core = { version = "0.100.1", features = [
   "ecma_ast",
   "ecma_ast_serde",
   "common_concurrent",
@@ -28,7 +28,7 @@ swc_core = { version = "0.74.2", features = [
   "ecma_transforms",
   "ecma_visit",
   "ecma_codegen",
-  "__parser",
+  "ecma_parser",
 ] }
 thiserror = "1.0.56"
 linked-hash-map = { version = "0.5.6", features = ["serde_impl"] }

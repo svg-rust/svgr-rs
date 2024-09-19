@@ -94,7 +94,7 @@ impl VisitMut for Visitor {
     required_attrs.iter().for_each(|attr| {
       n.attrs.push(JSXAttrOrSpread::JSXAttr(JSXAttr {
         span: DUMMY_SP,
-        name: JSXAttrName::Ident(Ident::new((*attr).into(), DUMMY_SP)),
+        name: JSXAttrName::Ident(IdentName::new((*attr).into(), DUMMY_SP)),
         value: Some(get_value(match *attr {
           "height" => self.height.as_ref(),
           "width" => self.width.as_ref(),
@@ -132,14 +132,15 @@ fn get_value(raw: Option<&Size>) -> JSXAttrValue {
 
 #[cfg(test)]
 mod tests {
+  use std::default::Default;
   use std::sync::Arc;
 
   use swc_core::{
     common::{FileName, SourceMap},
     ecma::{
       ast::*,
-      codegen::{text_writer::JsWriter, Config, Emitter},
-      parser::{lexer::Lexer, EsConfig, Parser, StringInput, Syntax},
+      codegen::{text_writer::JsWriter, Emitter},
+      parser::{lexer::Lexer, EsSyntax, Parser, StringInput, Syntax},
       visit::{as_folder, FoldWith},
     },
   };
@@ -152,11 +153,11 @@ mod tests {
   }
 
   fn code_test(input: &str, opts: Options, expected: &str) {
-    let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let cm = Arc::new(SourceMap::default());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
-      Syntax::Es(EsConfig {
+      Syntax::Es(EsSyntax {
         decorators: true,
         jsx: true,
         ..Default::default()
@@ -176,9 +177,7 @@ mod tests {
 
     let mut buf = vec![];
     let mut emitter = Emitter {
-      cfg: Config {
-        ..Default::default()
-      },
+      cfg: Default::default(),
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, "", &mut buf, None),

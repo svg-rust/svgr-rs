@@ -31,7 +31,7 @@ pub fn format_key(key: &str) -> PropName {
     key = key[1..].into();
   }
 
-  PropName::Ident(Ident::new(hyphen_to_camel_case(&key).into(), DUMMY_SP))
+  PropName::Ident(IdentName::new(hyphen_to_camel_case(&key).into(), DUMMY_SP))
 }
 
 fn is_convertible_pixel_value(s: &str) -> bool {

@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use regex::{Captures, Regex};
+use swc_core::common::SyntaxContext;
 use swc_core::{
   common::DUMMY_SP,
   ecma::{ast::*, atoms::JsWord},
@@ -109,13 +110,17 @@ impl HastVisitor {
         let value = attr.value.clone().map(|v| get_value(&attr.name, &v));
         JSXAttrOrSpread::JSXAttr(JSXAttr {
           span: DUMMY_SP,
-          name: JSXAttrName::Ident(self.get_key(&attr.name, &n.tag_name)),
+          name: JSXAttrName::Ident(self.get_key(&attr.name, &n.tag_name).into()),
           value,
         })
       })
       .collect::<Vec<JSXAttrOrSpread>>();
 
-    let name = JSXElementName::Ident(Ident::new(n.tag_name.clone(), DUMMY_SP));
+    let name = JSXElementName::Ident(Ident::new(
+      n.tag_name.clone(),
+      DUMMY_SP,
+      SyntaxContext::empty(),
+    ));
     let children = self.all(&n.children);
 
     let opening = JSXOpeningElement {
@@ -177,6 +182,7 @@ impl HastVisitor {
     if let Some(k) = rc_key {
       return Ident {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         sym: k.into(),
         optional: false,
       };
@@ -186,6 +192,7 @@ impl HastVisitor {
     if let Some(k) = mapped_attr {
       return Ident {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         sym: JsWord::from(*k),
         optional: false,
       };
@@ -196,6 +203,7 @@ impl HastVisitor {
     if kebab_key.starts_with("aria-") {
       return Ident {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         sym: convert_aria_attribute(attr_name).into(),
         optional: false,
       };
@@ -204,14 +212,16 @@ impl HastVisitor {
     if kebab_key.starts_with("data-") {
       return Ident {
         span: DUMMY_SP,
-        sym: attr_name.clone().into(),
+        ctxt: SyntaxContext::empty(),
+        sym: attr_name.into(),
         optional: false,
       };
     }
 
     Ident {
       span: DUMMY_SP,
-      sym: attr_name.clone().into(),
+      ctxt: SyntaxContext::empty(),
+      sym: attr_name.into(),
       optional: false,
     }
   }
@@ -255,10 +265,7 @@ mod tests {
       false => "\n",
     };
     let mut emitter = Emitter {
-      cfg: Config {
-        minify,
-        ..Default::default()
-      },
+      cfg: Config::default().with_minify(minify),
       cm: cm.clone(),
       comments: None,
       wr: JsWriter::new(cm, new_line, &mut buf, None),
@@ -289,7 +296,7 @@ mod tests {
 
   fn code_test(input: &str, expected: &str) {
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let res = transform(cm, fm, true);
 

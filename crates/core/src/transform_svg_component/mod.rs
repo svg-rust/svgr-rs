@@ -1,3 +1,4 @@
+use swc_core::common::SyntaxContext;
 use swc_core::{common::DUMMY_SP, ecma::ast::*};
 
 use crate::{core, SvgrError};
@@ -88,6 +89,7 @@ pub fn transform(
 
   body.push(ModuleItem::Stmt(Stmt::Decl(Decl::Var(Box::new(VarDecl {
     span: DUMMY_SP,
+    ctxt: SyntaxContext::empty(),
     kind: VarDeclKind::Const,
     declare: false,
     decls: vec![VarDeclarator {
@@ -95,10 +97,12 @@ pub fn transform(
       name: Pat::Ident(BindingIdent::from(Ident::new(
         state.component_name.clone().into(),
         DUMMY_SP,
+        SyntaxContext::empty(),
       ))),
       definite: false,
       init: Some(Box::new(Expr::Arrow(ArrowExpr {
         span: DUMMY_SP,
+        ctxt: SyntaxContext::empty(),
         params: variables.props,
         body: Box::new(BlockStmtOrExpr::Expr(Box::new(Expr::JSXElement(Box::new(
           variables.jsx,
@@ -144,12 +148,12 @@ mod tests {
     expected: &str,
   ) {
     let cm = Arc::<SourceMap>::default();
-    let fm = cm.new_source_file(FileName::Anon, input.to_string());
+    let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let mut recovered_errors = vec![];
     let expr = parser::parse_file_as_expr(
       fm.borrow(),
-      parser::Syntax::Es(parser::EsConfig {
+      parser::Syntax::Es(parser::EsSyntax {
         jsx: true,
         ..Default::default()
       }),
@@ -278,7 +282,7 @@ export default ForwardRef;
         ..Default::default()
       },
       r#"import * as React from "react";
-const SvgComponent = ({ title , titleId  })=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId })=><svg><g/></svg>;
 export default SvgComponent;
 "#,
       r#"import * as React from "react";
@@ -286,7 +290,7 @@ interface SVGRProps {
     title?: string;
     titleId?: string;
 }
-const SvgComponent = ({ title , titleId  }: SVGRProps)=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId }: SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#,
     );
@@ -305,7 +309,7 @@ export default SvgComponent;
         ..Default::default()
       },
       r#"import * as React from "react";
-const SvgComponent = ({ title , titleId , ...props })=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId, ...props })=><svg><g/></svg>;
 export default SvgComponent;
 "#,
       r#"import * as React from "react";
@@ -314,7 +318,7 @@ interface SVGRProps {
     title?: string;
     titleId?: string;
 }
-const SvgComponent = ({ title , titleId , ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId, ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#,
     );
@@ -333,7 +337,7 @@ export default SvgComponent;
         ..Default::default()
       },
       r#"import * as React from "react";
-const SvgComponent = ({ desc , descId  })=><svg><g/></svg>;
+const SvgComponent = ({ desc, descId })=><svg><g/></svg>;
 export default SvgComponent;
 "#,
       r#"import * as React from "react";
@@ -341,7 +345,7 @@ interface SVGRProps {
     desc?: string;
     descId?: string;
 }
-const SvgComponent = ({ desc , descId  }: SVGRProps)=><svg><g/></svg>;
+const SvgComponent = ({ desc, descId }: SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#,
     );
@@ -360,7 +364,7 @@ export default SvgComponent;
         ..Default::default()
       },
       r#"import * as React from "react";
-const SvgComponent = ({ desc , descId , ...props })=><svg><g/></svg>;
+const SvgComponent = ({ desc, descId, ...props })=><svg><g/></svg>;
 export default SvgComponent;
 "#,
       r#"import * as React from "react";
@@ -369,7 +373,7 @@ interface SVGRProps {
     desc?: string;
     descId?: string;
 }
-const SvgComponent = ({ desc , descId , ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
+const SvgComponent = ({ desc, descId, ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#,
     );
@@ -389,7 +393,7 @@ export default SvgComponent;
         ..Default::default()
       },
       r#"import * as React from "react";
-const SvgComponent = ({ title , titleId , desc , descId  })=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId, desc, descId })=><svg><g/></svg>;
 export default SvgComponent;
 "#,
       r#"import * as React from "react";
@@ -399,7 +403,7 @@ interface SVGRProps {
     desc?: string;
     descId?: string;
 }
-const SvgComponent = ({ title , titleId , desc , descId  }: SVGRProps)=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId, desc, descId }: SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#,
     );
@@ -420,7 +424,7 @@ export default SvgComponent;
         ..Default::default()
       },
       r#"import * as React from "react";
-const SvgComponent = ({ title , titleId , desc , descId , ...props })=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId, desc, descId, ...props })=><svg><g/></svg>;
 export default SvgComponent;
 "#,
       r#"import * as React from "react";
@@ -431,7 +435,7 @@ interface SVGRProps {
     desc?: string;
     descId?: string;
 }
-const SvgComponent = ({ title , titleId , desc , descId , ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
+const SvgComponent = ({ title, titleId, desc, descId, ...props }: SVGProps<SVGSVGElement> & SVGRProps)=><svg><g/></svg>;
 export default SvgComponent;
 "#,
     );
