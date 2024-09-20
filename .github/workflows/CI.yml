@@ -82,10 +82,9 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |-
-              set -e &&
-              rustup default nightly-2023-06-27 &&
-              yarn build --target x86_64-unknown-linux-gnu &&
+            build: |
+              set -e
+              yarn build --target x86_64-unknown-linux-gnu
               strip *.node
           - host: macos-latest
             target: aarch64-apple-darwin
@@ -94,7 +93,9 @@ jobs:
               strip -x *.node
           - host: windows-latest
             target: aarch64-pc-windows-msvc
-            build: yarn build --target aarch64-pc-windows-msvc
+            build: |
+              rustup target add aarch64-pc-windows-msvc
+              yarn build --target aarch64-pc-windows-msvc
     name: stable - ${{ matrix.settings.target }} - node@18
     needs:
       - cargo-test
