@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use swc_core::common::SyntaxContext;
 use swc_core::{
@@ -19,8 +20,10 @@ use self::string_to_object_style::*;
 use self::util::*;
 
 fn kebab_case(str: &str) -> String {
-  let kebab_regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
-  kebab_regex
+  lazy_static! {
+    static ref KEBAB_REGEX: Regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
+  }
+  KEBAB_REGEX
     .replace_all(str, |caps: &Captures| {
       format!("-{}", &caps[0].to_lowercase())
     })
@@ -35,8 +38,10 @@ fn convert_aria_attribute(kebab_key: &str) -> String {
 }
 
 fn replace_spaces(s: &str) -> String {
-  let spaces_regex = Regex::new(r"[\t\r\n\u0085\u2028\u2029]+").unwrap();
-  spaces_regex.replace_all(s, |_: &Captures| " ").to_string()
+  lazy_static! {
+    static ref SPACES_REGEX: Regex = Regex::new(r"[\t\r\n\u0085\u2028\u2029]+").unwrap();
+  }
+  SPACES_REGEX.replace_all(s, |_: &Captures| " ").to_string()
 }
 
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
@@ -68,10 +73,12 @@ fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
 }
 
 fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
-  let value = n.data.to_string();
+  lazy_static! {
+    static ref SPACE_REGEX: Regex = Regex::new(r"^\s+$").unwrap();
+  }
 
-  let space_regex = Regex::new(r"^\s+$").unwrap();
-  if space_regex.is_match(&value) {
+  let value = n.data.to_string();
+  if SPACE_REGEX.is_match(&value) {
     return None;
   }
 
