@@ -1936,6 +1936,7 @@ version = "0.1.3"
 dependencies = [
  "clap",
  "codspeed-criterion-compat",
+ "lazy_static",
  "linked-hash-map",
  "linked_hash_set",
  "napi",
