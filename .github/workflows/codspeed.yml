@@ -16,14 +16,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      # ...
-      # Setup your environment here:
-      #  - Configure your Python/Rust/Node version
-      #  - Install your dependencies
-      #  - Build your benchmarks (if using a compiled language)
-      # ...
+
+      - name: Setup rust toolchain, cache and cargo-codspeed binary
+        uses: moonrepo/setup-rust@v0
+        with:
+          channel: stable
+          cache-target: release
+          bins: cargo-codspeed
+
+      - name: Build the benchmark target(s)
+        run: cargo codspeed build
+
       - name: Run benchmarks
         uses: CodSpeedHQ/action@v3
         with:
           token: ${{ secrets.CODSPEED_TOKEN }}
-          run: cargo bench --manifest-path crates/core/Cargo.toml
+          run: cargo codspeed run --package svgr-rs
