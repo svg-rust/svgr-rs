@@ -63,7 +63,7 @@ fn get_attr_value(new: &str) -> JSXAttrValue {
 
 #[cfg(test)]
 mod tests {
-  use std::rc::Rc;
+  use std::rc::Arc;
 
   use swc_core::{
     common::{FileName, SourceMap},
@@ -78,7 +78,7 @@ mod tests {
   use super::*;
 
   fn code_test(input: &str, replace_attr_values: LinkedHashMap<String, String>, expected: &str) {
-    let cm = Rc::<SourceMap>::default();
+    let cm = Arc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(

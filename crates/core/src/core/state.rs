@@ -1,16 +1,8 @@
 use std::path::Path;
 
+use lazy_static::lazy_static;
 use regex::Regex;
 
-#[cfg(feature = "node")]
-#[napi(object)]
-#[derive(Debug, Clone, Default)]
-pub struct Caller {
-  pub name: Option<String>,
-  pub previous_export: Option<String>,
-}
-
-#[cfg(not(feature = "node"))]
 #[derive(Debug, Clone, Default)]
 pub struct Caller {
   pub name: Option<String>,
@@ -18,8 +10,6 @@ pub struct Caller {
 }
 
 /// The state linked to the transformation.
-#[cfg(feature = "node")]
-#[napi(object, js_name = "State")]
 pub struct Config {
   /// The name of the file that is generated, mainly used to find runtime config file to apply.
   pub file_path: Option<String>,
@@ -41,13 +31,6 @@ impl Default for Config {
       caller: None,
     }
   }
-}
-
-#[cfg(not(feature = "node"))]
-pub struct Config {
-  pub file_path: Option<String>,
-  pub component_name: Option<String>,
-  pub caller: Option<Caller>,
 }
 
 #[derive(Debug)]
@@ -80,16 +63,20 @@ const IDENTIFIER: &str = r"([\p{Alpha}\p{N}_]|$)";
 const SEPARATORS: &str = r"[_.\- ]+";
 
 fn pascal_case(input: &str) -> String {
-  let separators_and_identifier =
-    Regex::new(format!("{}{}", SEPARATORS, IDENTIFIER).as_str()).unwrap();
-  let numbers_and_identifier = Regex::new(format!("(\\d+){}", IDENTIFIER).as_str()).unwrap();
-  let result = separators_and_identifier
+  lazy_static! {
+    static ref SEPARATORS_AND_IDENTIFIER_REGEX: Regex =
+      Regex::new(&format!("{}{}", SEPARATORS, IDENTIFIER)).unwrap();
+    static ref NUMBERS_AND_IDENTIFIER_REGEX: Regex =
+      Regex::new(&format!("(\\d+){}", IDENTIFIER)).unwrap();
+  }
+
+  let result = SEPARATORS_AND_IDENTIFIER_REGEX
     .replace_all(input, |caps: &regex::Captures| {
       let identifier = caps.get(1).unwrap().as_str();
       identifier.to_uppercase()
     })
     .to_string();
-  let result = numbers_and_identifier
+  let result = NUMBERS_AND_IDENTIFIER_REGEX
     .replace_all(&result, |caps: &regex::Captures| {
       let num = caps.get(1).unwrap().as_str();
       let identifier = caps.get(2).unwrap().as_str();
@@ -100,8 +87,11 @@ fn pascal_case(input: &str) -> String {
 }
 
 fn get_component_name(file_path: &str) -> String {
-  let valid_char_regex = Regex::new(r"[^a-zA-Z0-9 _-]").unwrap();
-  let file_name = valid_char_regex
+  lazy_static! {
+    static ref VALID_CHAR_REGEX_REGEX: Regex = Regex::new(r"[^a-zA-Z0-9 _-]").unwrap();
+  }
+
+  let file_name = VALID_CHAR_REGEX_REGEX
     .replace_all(
       Path::new(file_path)
         .file_prefix()

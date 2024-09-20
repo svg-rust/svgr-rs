@@ -1,11 +1,7 @@
 #![feature(path_file_prefix)]
 #![deny(clippy::all)]
 
-#[cfg(feature = "node")]
-#[macro_use]
-extern crate napi_derive;
-
-use std::{borrow::Borrow, rc::Rc};
+use std::{sync::Arc};
 
 use swc_core::{
   common::{comments::SingleThreadedComments, FileName, SourceMap},
@@ -56,11 +52,11 @@ pub use self::core::state::{Caller, Config as State};
 pub fn transform(code: String, config: Config, state: State) -> Result<String, SvgrError> {
   let state = core::state::expand_state(&state);
 
-  let cm = Rc::<SourceMap>::default();
+  let cm = Arc::<SourceMap>::default();
   let fm = cm.new_source_file(FileName::Anon.into(), code);
 
   let mut errors = vec![];
-  let document = parse_file_as_document(fm.borrow(), Default::default(), &mut errors)
+  let document = parse_file_as_document(fm.as_ref(), Default::default(), &mut errors)
     .map_err(|e| SvgrError::Parse(e.message().to_string()))?;
 
   let jsx_element = hast_to_swc_ast::to_swc_ast(document);

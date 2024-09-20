@@ -1,23 +1,26 @@
+use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use swc_core::{common::DUMMY_SP, ecma::ast::*};
 
 use super::util::*;
 
-const PX_REGEX: &str = r#"^\d+px$"#;
-const MS_REGEX: &str = r#"^-ms-"#;
-const VAR_REGEX: &str = r#"^--"#;
-
 pub fn hyphen_to_camel_case(s: &str) -> String {
-  let regex = Regex::new(r#"-(.)"#).unwrap();
-  regex
+  lazy_static! {
+    static ref HYPHEN_REGEX: Regex = Regex::new(r#"-(.)"#).unwrap();
+  }
+  HYPHEN_REGEX
     .replace_all(s, |caps: &Captures| caps[1].to_uppercase())
     .into()
 }
 
 // Format style key into JSX style object key.
 pub fn format_key(key: &str) -> PropName {
-  let var_regex = Regex::new(VAR_REGEX).unwrap();
-  if var_regex.is_match(key) {
+  lazy_static! {
+    static ref VAR_REGEX: Regex = Regex::new(r#"^--"#).unwrap();
+    static ref MS_REGEX: Regex = Regex::new(r#"^-ms-"#).unwrap();
+  }
+
+  if VAR_REGEX.is_match(key) {
     return PropName::Str(Str {
       span: DUMMY_SP,
       value: key.into(),
@@ -26,8 +29,7 @@ pub fn format_key(key: &str) -> PropName {
   }
 
   let mut key = key.to_lowercase();
-  let ms_regex = Regex::new(MS_REGEX).unwrap();
-  if ms_regex.is_match(&key) {
+  if MS_REGEX.is_match(&key) {
     key = key[1..].into();
   }
 
@@ -35,8 +37,10 @@ pub fn format_key(key: &str) -> PropName {
 }
 
 fn is_convertible_pixel_value(s: &str) -> bool {
-  let px_regex = Regex::new(PX_REGEX).unwrap();
-  px_regex.is_match(s)
+  lazy_static! {
+    static ref PX_REGEX: Regex = Regex::new(r#"^\d+px$"#).unwrap();
+  }
+  PX_REGEX.is_match(s)
 }
 
 // Format style value into JSX style object value.
