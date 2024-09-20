@@ -4,40 +4,11 @@
 #[macro_use]
 extern crate napi_derive;
 
-use svgr_rs::{transform, Caller, Config, State};
-use swc_core::node::get_deserialized;
+mod state;
+mod config;
 
-#[napi(object, object_to_js = false)]
-pub struct JsCaller {
-  pub name: Option<String>,
-  pub previous_export: Option<String>,
-}
-
-impl From<JsCaller> for Caller {
-  fn from(val: JsCaller) -> Self {
-    Self {
-      name: val.name,
-      previous_export: val.previous_export,
-    }
-  }
-}
-
-#[napi(object, object_to_js = false)]
-pub struct JsState {
-  pub file_path: Option<String>,
-  pub component_name: Option<String>,
-  pub caller: Option<JsCaller>,
-}
-
-impl From<JsState> for State {
-  fn from(val: JsState) -> Self {
-    Self {
-      file_path: val.file_path,
-      component_name: val.component_name,
-      caller: val.caller.map(|c| c.into()),
-    }
-  }
-}
+use state::JsState;
+use svgr_rs::{transform, Config};
 
 #[napi(js_name = "transform")]
 pub async fn transform_node(

@@ -8,9 +8,7 @@ repository  = "https://github.com/svg-rust/svgr-rs.git"
 version     = "0.1.3"
 
 [dependencies]
-clap = { version = "4.2.0", features = ["derive"] }
 regex = "1.7.3"
-serde = { version = "1", features = ["derive"] }
 swc_xml = "0.17.0"
 swc_core = { version = "0.100.1", features = [
   "ecma_ast",
