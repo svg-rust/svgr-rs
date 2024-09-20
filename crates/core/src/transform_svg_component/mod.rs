@@ -128,7 +128,7 @@ pub fn transform(
 
 #[cfg(test)]
 mod tests {
-  use std::{borrow::Borrow, rc::Arc};
+  use std::{borrow::Borrow, sync::Arc};
 
   use swc_core::{
     common::{FileName, SourceMap},

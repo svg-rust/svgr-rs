@@ -1,7 +1,7 @@
 #![feature(path_file_prefix)]
 #![deny(clippy::all)]
 
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use swc_core::{
   common::{comments::SingleThreadedComments, FileName, SourceMap},

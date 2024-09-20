@@ -132,7 +132,7 @@ fn get_value(raw: Option<&Size>) -> JSXAttrValue {
 
 #[cfg(test)]
 mod tests {
-  use std::{default::Default, rc::Arc};
+  use std::{default::Default, sync::Arc};
 
   use swc_core::{
     common::{FileName, SourceMap},

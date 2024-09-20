@@ -222,7 +222,7 @@ fn svg_prop_to_attr(key: &str, value: &str) -> Attribute {
 
 #[cfg(test)]
 mod tests {
-  use std::rc::Arc;
+  use std::sync::Arc;
 
   use swc_core::{
     common::{FileName, SourceMap},

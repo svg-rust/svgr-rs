@@ -219,7 +219,7 @@ impl VisitMut for Visitor {
 
 #[cfg(test)]
 mod tests {
-  use std::rc::Arc;
+  use std::sync::Arc;
 
   use swc_core::{
     common::{FileName, SourceMap},

@@ -1,4 +1,5 @@
-use std::{cell::RefCell, collections::HashMap, sync::Arc};
+use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap};
 
 use linked_hash_set::LinkedHashSet;
 use swc_core::common::SyntaxContext;
@@ -15,16 +16,16 @@ use swc_core::{
 };
 
 pub struct Visitor<'a> {
-  replaced_components: Arc<RefCell<LinkedHashSet<String>>>,
-  unsupported_components: Arc<RefCell<LinkedHashSet<String>>>,
+  replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+  unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
   comments: &'a dyn Comments,
 }
 
 impl<'a> Visitor<'a> {
   pub fn new(comments: &'a dyn Comments) -> Self {
     Visitor {
-      replaced_components: Arc::new(RefCell::new(LinkedHashSet::new())),
-      unsupported_components: Arc::new(RefCell::new(LinkedHashSet::new())),
+      replaced_components: Rc::new(RefCell::new(LinkedHashSet::new())),
+      unsupported_components: Rc::new(RefCell::new(LinkedHashSet::new())),
       comments,
     }
   }
@@ -66,14 +67,14 @@ impl VisitMut for Visitor<'_> {
 }
 
 struct SvgElementVisitor {
-  replaced_components: Arc<RefCell<LinkedHashSet<String>>>,
-  unsupported_components: Arc<RefCell<LinkedHashSet<String>>>,
+  replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+  unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
 }
 
 impl SvgElementVisitor {
   fn new(
-    replaced_components: Arc<RefCell<LinkedHashSet<String>>>,
-    unsupported_components: Arc<RefCell<LinkedHashSet<String>>>,
+    replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+    unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
   ) -> Self {
     SvgElementVisitor {
       replaced_components,
@@ -105,14 +106,14 @@ impl VisitMut for SvgElementVisitor {
 struct JSXElementVisitor {
   element_to_component: HashMap<&'static str, &'static str>,
 
-  replaced_components: Arc<RefCell<LinkedHashSet<String>>>,
-  unsupported_components: Arc<RefCell<LinkedHashSet<String>>>,
+  replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+  unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
 }
 
 impl JSXElementVisitor {
   fn new(
-    replaced_components: Arc<RefCell<LinkedHashSet<String>>>,
-    unsupported_components: Arc<RefCell<LinkedHashSet<String>>>,
+    replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
+    unsupported_components: Rc<RefCell<LinkedHashSet<String>>>,
   ) -> Self {
     JSXElementVisitor {
       element_to_component: get_element_to_component(),
@@ -191,12 +192,12 @@ fn get_element_to_component() -> HashMap<&'static str, &'static str> {
 }
 
 struct ImportDeclVisitor {
-  replaced_components: Arc<RefCell<LinkedHashSet<String>>>,
+  replaced_components: Rc<RefCell<LinkedHashSet<String>>>,
   import_decl_span: Option<Span>,
 }
 
 impl ImportDeclVisitor {
-  fn new(replaced_components: Arc<RefCell<LinkedHashSet<String>>>) -> Self {
+  fn new(replaced_components: Rc<RefCell<LinkedHashSet<String>>>) -> Self {
     ImportDeclVisitor {
       replaced_components,
       import_decl_span: None,
@@ -249,6 +250,8 @@ impl VisitMut for ImportDeclVisitor {
 
 #[cfg(test)]
 mod tests {
+  use std::sync::Arc;
+
   use swc_core::{
     common::{comments::SingleThreadedComments, FileName, SourceMap},
     ecma::{

@@ -248,7 +248,7 @@ pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
 
 #[cfg(test)]
 mod tests {
-  use std::{borrow::Borrow, path::PathBuf, rc::Arc};
+  use std::{borrow::Borrow, path::PathBuf, sync::Arc};
 
   use swc_core::{
     common::{FileName, SourceFile, SourceMap},
