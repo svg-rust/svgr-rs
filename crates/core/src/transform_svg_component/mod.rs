@@ -128,7 +128,7 @@ pub fn transform(
 
 #[cfg(test)]
 mod tests {
-  use std::{borrow::Borrow, sync::Arc};
+  use std::{borrow::Borrow, rc::Rc};
 
   use swc_core::{
     common::{FileName, SourceMap},
@@ -147,7 +147,7 @@ mod tests {
     state: &core::state::InternalConfig,
     expected: &str,
   ) {
-    let cm = Arc::<SourceMap>::default();
+    let cm = Rc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let mut recovered_errors = vec![];

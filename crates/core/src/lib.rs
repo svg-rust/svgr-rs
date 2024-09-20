@@ -5,7 +5,7 @@
 #[macro_use]
 extern crate napi_derive;
 
-use std::{borrow::Borrow, sync::Arc};
+use std::{borrow::Borrow, rc::Rc};
 
 use swc_core::{
   common::{comments::SingleThreadedComments, FileName, SourceMap},
@@ -56,7 +56,7 @@ pub use self::core::state::{Caller, Config as State};
 pub fn transform(code: String, config: Config, state: State) -> Result<String, SvgrError> {
   let state = core::state::expand_state(&state);
 
-  let cm = Arc::<SourceMap>::default();
+  let cm = Rc::<SourceMap>::default();
   let fm = cm.new_source_file(FileName::Anon.into(), code);
 
   let mut errors = vec![];

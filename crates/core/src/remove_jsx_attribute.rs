@@ -51,8 +51,7 @@ impl VisitMut for Visitor {
 
 #[cfg(test)]
 mod tests {
-  use std::default::Default;
-  use std::sync::Arc;
+  use std::{default::Default, rc::Rc};
 
   use swc_core::{
     common::{FileName, SourceMap},
@@ -72,7 +71,7 @@ mod tests {
   }
 
   fn code_test(input: &str, opts: Options, expected: &str) {
-    let cm = Arc::new(SourceMap::default());
+    let cm = Rc::new(SourceMap::default());
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(

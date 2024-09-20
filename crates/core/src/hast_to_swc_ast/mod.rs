@@ -241,7 +241,7 @@ pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
 
 #[cfg(test)]
 mod tests {
-  use std::{borrow::Borrow, path::PathBuf, sync::Arc};
+  use std::{borrow::Borrow, path::PathBuf, rc::Rc};
 
   use swc_core::{
     common::{FileName, SourceFile, SourceMap},
@@ -252,7 +252,7 @@ mod tests {
 
   use super::*;
 
-  fn transform(cm: Arc<SourceMap>, fm: Arc<SourceFile>, minify: bool) -> String {
+  fn transform(cm: Rc<SourceMap>, fm: Rc<SourceFile>, minify: bool) -> String {
     let mut errors = vec![];
     let doc = parse_file_as_document(fm.borrow(), Default::default(), &mut errors).unwrap();
 
@@ -284,7 +284,7 @@ mod tests {
   fn document_test(input: PathBuf) {
     let jsx_path = input.parent().unwrap().join("output.jsx");
 
-    let cm = Arc::<SourceMap>::default();
+    let cm = Rc::<SourceMap>::default();
     let fm = cm.load_file(&input).expect("failed to load fixture file");
 
     let res = transform(cm, fm, false);
@@ -295,7 +295,7 @@ mod tests {
   }
 
   fn code_test(input: &str, expected: &str) {
-    let cm = Arc::<SourceMap>::default();
+    let cm = Rc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let res = transform(cm, fm, true);

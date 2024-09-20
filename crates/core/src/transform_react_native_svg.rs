@@ -249,8 +249,6 @@ impl VisitMut for ImportDeclVisitor {
 
 #[cfg(test)]
 mod tests {
-  use std::sync::Arc;
-
   use swc_core::{
     common::{comments::SingleThreadedComments, FileName, SourceMap},
     ecma::{
@@ -264,7 +262,7 @@ mod tests {
   use super::*;
 
   fn code_test(input: &str, expected: &str) {
-    let cm = Arc::<SourceMap>::default();
+    let cm = Rc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
