@@ -3,7 +3,7 @@ env:
   DEBUG: napi:*
   APP_NAME: svgr-rs
   MACOSX_DEPLOYMENT_TARGET: '10.13'
-'on':
+on:
   push:
     branches:
       - main
@@ -26,7 +26,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly-2023-06-27
+          toolchain: nightly-2024-04-16
           target: x86_64-unknown-linux-gnu
 
       - name: Run Cargo Check
@@ -62,7 +62,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly-2023-06-27
+          toolchain: nightly-2024-04-16
           target: x86_64-unknown-linux-gnu
       - name: Run cargo test
         run: cargo test -p svgr-rs
@@ -82,9 +82,10 @@ jobs:
           - host: ubuntu-latest
             target: x86_64-unknown-linux-gnu
             docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-            build: |
-              set -e
-              yarn build --target x86_64-unknown-linux-gnu
+            build: |-
+              set -e &&
+              rustup default nightly-2024-04-16 &&
+              yarn build --target x86_64-unknown-linux-gnu &&
               strip *.node
           - host: macos-latest
             target: aarch64-apple-darwin
