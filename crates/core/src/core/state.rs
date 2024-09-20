@@ -3,15 +3,6 @@ use std::path::Path;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-#[cfg(feature = "node")]
-#[napi(object)]
-#[derive(Debug, Clone, Default)]
-pub struct Caller {
-  pub name: Option<String>,
-  pub previous_export: Option<String>,
-}
-
-#[cfg(not(feature = "node"))]
 #[derive(Debug, Clone, Default)]
 pub struct Caller {
   pub name: Option<String>,
@@ -19,8 +10,6 @@ pub struct Caller {
 }
 
 /// The state linked to the transformation.
-#[cfg(feature = "node")]
-#[napi(object, js_name = "State")]
 pub struct Config {
   /// The name of the file that is generated, mainly used to find runtime config file to apply.
   pub file_path: Option<String>,
@@ -42,13 +31,6 @@ impl Default for Config {
       caller: None,
     }
   }
-}
-
-#[cfg(not(feature = "node"))]
-pub struct Config {
-  pub file_path: Option<String>,
-  pub component_name: Option<String>,
-  pub caller: Option<Caller>,
 }
 
 #[derive(Debug)]
