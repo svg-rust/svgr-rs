@@ -1,10 +1,6 @@
 #![feature(path_file_prefix)]
 #![deny(clippy::all)]
 
-#[cfg(feature = "node")]
-#[macro_use]
-extern crate napi_derive;
-
 use std::{borrow::Borrow, sync::Arc};
 
 use swc_core::{

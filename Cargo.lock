@@ -1939,8 +1939,6 @@ dependencies = [
  "lazy_static",
  "linked-hash-map",
  "linked_hash_set",
- "napi",
- "napi-derive",
  "regex",
  "serde",
  "swc_core",
