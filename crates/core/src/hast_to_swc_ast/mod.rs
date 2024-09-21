@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
@@ -15,19 +15,17 @@ mod string_to_object_style;
 mod util;
 
 use self::decode_xml::*;
-use self::mappings::*;
+use self::mappings::ATTR_MAPPINGS;
 use self::string_to_object_style::*;
 use self::util::*;
 
-fn kebab_case(str: &str) -> String {
+fn kebab_case(str: &str) -> Cow<str> {
   lazy_static! {
     static ref KEBAB_REGEX: Regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
   }
-  KEBAB_REGEX
-    .replace_all(str, |caps: &Captures| {
-      format!("-{}", &caps[0].to_lowercase())
-    })
-    .to_string()
+  KEBAB_REGEX.replace_all(str, |caps: &Captures| {
+    format!("-{}", &caps[0].to_lowercase())
+  })
 }
 
 fn convert_aria_attribute(kebab_key: &str) -> String {
@@ -37,11 +35,11 @@ fn convert_aria_attribute(kebab_key: &str) -> String {
   format!("{}-{}", aria, lowercase_parts)
 }
 
-fn replace_spaces(s: &str) -> String {
+fn replace_spaces(s: &str) -> Cow<str> {
   lazy_static! {
     static ref SPACES_REGEX: Regex = Regex::new(r"[\t\r\n\u0085\u2028\u2029]+").unwrap();
   }
-  SPACES_REGEX.replace_all(s, |_: &Captures| " ").to_string()
+  SPACES_REGEX.replace_all(s, |_: &Captures| " ")
 }
 
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
@@ -77,8 +75,8 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     static ref SPACE_REGEX: Regex = Regex::new(r"^\s+$").unwrap();
   }
 
-  let value = n.data.to_string();
-  if SPACE_REGEX.is_match(&value) {
+  let value = n.data.as_str();
+  if SPACE_REGEX.is_match(value) {
     return None;
   }
 
@@ -86,7 +84,7 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     span: DUMMY_SP,
     expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Str(Str {
       span: DUMMY_SP,
-      value: decode_xml(&value).into(),
+      value: decode_xml(value).into(),
       raw: None,
     })))),
   }))
@@ -94,19 +92,19 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
 
 pub struct HastVisitor {
   jsx: Option<JSXElement>,
-  attr_mappings: HashMap<&'static str, &'static str>,
+  attr_mappings: &'static HashMap<&'static str, &'static str>,
 }
 
 impl HastVisitor {
   fn new() -> Self {
     Self {
       jsx: None,
-      attr_mappings: create_attr_mappings(),
+      attr_mappings: &ATTR_MAPPINGS,
     }
   }
 
-  pub fn get_jsx(&self) -> Option<JSXElement> {
-    self.jsx.clone()
+  pub fn take_jsx(&mut self) -> Option<JSXElement> {
+    self.jsx.take()
   }
 
   fn element(&self, n: &swc_xml::ast::Element) -> JSXElement {
@@ -114,7 +112,7 @@ impl HastVisitor {
       .attributes
       .iter()
       .map(|attr| {
-        let value = attr.value.clone().map(|v| get_value(&attr.name, &v));
+        let value = attr.value.as_ref().map(|v| get_value(&attr.name, v));
         JSXAttrOrSpread::JSXAttr(JSXAttr {
           span: DUMMY_SP,
           name: JSXAttrName::Ident(self.get_key(&attr.name, &n.tag_name).into()),
@@ -130,21 +128,21 @@ impl HastVisitor {
     ));
     let children = self.all(&n.children);
 
-    let opening = JSXOpeningElement {
-      span: DUMMY_SP,
-      name: name.clone(),
-      attrs,
-      self_closing: children.is_empty(),
-      type_args: None,
-    };
-
     let closing = if !children.is_empty() {
       Some(JSXClosingElement {
         span: DUMMY_SP,
-        name,
+        name: name.clone(),
       })
     } else {
       None
+    };
+
+    let opening = JSXOpeningElement {
+      span: DUMMY_SP,
+      name,
+      attrs,
+      self_closing: children.is_empty(),
+      type_args: None,
     };
 
     JSXElement {
@@ -243,7 +241,7 @@ impl Visit for HastVisitor {
 pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
   let mut v = HastVisitor::new();
   hast.visit_with(&mut v);
-  v.get_jsx()
+  v.take_jsx()
 }
 
 #[cfg(test)]
@@ -285,7 +283,7 @@ mod tests {
       })))
       .unwrap();
 
-    String::from_utf8_lossy(&buf).to_string()
+    unsafe { String::from_utf8_unchecked(buf) }
   }
 
   fn document_test(input: PathBuf) {
