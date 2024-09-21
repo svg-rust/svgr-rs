@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
@@ -19,15 +19,13 @@ use self::mappings::*;
 use self::string_to_object_style::*;
 use self::util::*;
 
-fn kebab_case(str: &str) -> String {
+fn kebab_case(str: &str) -> Cow<str> {
   lazy_static! {
     static ref KEBAB_REGEX: Regex = Regex::new(r"[A-Z\u00C0-\u00D6\u00D8-\u00DE]").unwrap();
   }
-  KEBAB_REGEX
-    .replace_all(str, |caps: &Captures| {
-      format!("-{}", &caps[0].to_lowercase())
-    })
-    .to_string()
+  KEBAB_REGEX.replace_all(str, |caps: &Captures| {
+    format!("-{}", &caps[0].to_lowercase())
+  })
 }
 
 fn convert_aria_attribute(kebab_key: &str) -> String {
@@ -37,11 +35,11 @@ fn convert_aria_attribute(kebab_key: &str) -> String {
   format!("{}-{}", aria, lowercase_parts)
 }
 
-fn replace_spaces(s: &str) -> String {
+fn replace_spaces(s: &str) -> Cow<str> {
   lazy_static! {
     static ref SPACES_REGEX: Regex = Regex::new(r"[\t\r\n\u0085\u2028\u2029]+").unwrap();
   }
-  SPACES_REGEX.replace_all(s, |_: &Captures| " ").to_string()
+  SPACES_REGEX.replace_all(s, |_: &Captures| " ")
 }
 
 fn get_value(attr_name: &str, value: &JsWord) -> JSXAttrValue {
@@ -105,8 +103,8 @@ impl HastVisitor {
     }
   }
 
-  pub fn get_jsx(&self) -> Option<JSXElement> {
-    self.jsx.clone()
+  pub fn take_jsx(&mut self) -> Option<JSXElement> {
+    self.jsx.take()
   }
 
   fn element(&self, n: &swc_xml::ast::Element) -> JSXElement {
@@ -243,7 +241,7 @@ impl Visit for HastVisitor {
 pub fn to_swc_ast(hast: swc_xml::ast::Document) -> Option<JSXElement> {
   let mut v = HastVisitor::new();
   hast.visit_with(&mut v);
-  v.get_jsx()
+  v.take_jsx()
 }
 
 #[cfg(test)]
