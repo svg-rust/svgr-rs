@@ -1,9 +1,9 @@
-use napi::{bindgen_prelude::Either3, Either, JsObject};
+use napi::{bindgen_prelude::{Either3, Object}, Either};
 use svgr_rs::{Config, ExpandProps, Icon, JSXRuntime, JSXRuntimeImport};
 
 #[napi(object, object_to_js = false)]
 pub struct JsConfig {
-    /// Setting this to `true` will forward ref to the root SVG tag.
+  /// Setting this to `true` will forward ref to the root SVG tag.
   pub r#ref: Option<bool>,
 
   /// Add title tag via title property.
@@ -31,7 +31,7 @@ pub struct JsConfig {
   pub native: Option<bool>,
 
   /// Add props to the root SVG tag.
-  pub svg_props: Option<JsObject>,
+  pub svg_props: Option<Object>,
 
   /// Generates `.tsx` files with TypeScript typings.
   pub typescript: Option<bool>,
@@ -41,7 +41,7 @@ pub struct JsConfig {
 
   /// Replace an attribute value by an other.
   /// The main usage of this option is to change an icon color to "currentColor" in order to inherit from text color.
-  pub replace_attr_values: Option<JsObject>,
+  pub replace_attr_values: Option<Object>,
 
   /// Specify a JSX runtime to use.
   /// * "classic": adds `import * as React from 'react'` on the top of file
@@ -61,51 +61,65 @@ pub struct JsConfig {
 }
 
 impl From<JsConfig> for Config {
-    fn from(val: JsConfig) -> Self {
-      let expand_props = match val.expand_props {
-        Some(e) => match e {
-            Either::A(b) => ExpandProps::Bool(b),
-            Either::B(s) => match s.as_str() {
-              "start" => ExpandProps::Start,
-              "end" => ExpandProps::End,
-              _ => ExpandProps::End
-            },
+  fn from(val: JsConfig) -> Self {
+    let expand_props = match val.expand_props {
+      Some(e) => match e {
+        Either::A(b) => ExpandProps::Bool(b),
+        Either::B(s) => match s.as_str() {
+          "start" => ExpandProps::Start,
+          "end" => ExpandProps::End,
+          _ => ExpandProps::End,
         },
-        None => ExpandProps::End,
+      },
+      None => ExpandProps::End,
     };
 
     let icon = match val.icon {
-        Some(i) => Some(match i {
-            Either3::A(b) => Icon::Bool(b),
-            Either3::B(s) => Icon::Str(s),
-            Either3::C(f) => Icon::Num(f),
-        }),
+      Some(i) => Some(match i {
+        Either3::A(b) => Icon::Bool(b),
+        Either3::B(s) => Icon::Str(s),
+        Either3::C(f) => Icon::Num(f),
+      }),
+      None => None,
+    };
+
+    let svg_props = match val.svg_props {
+        Some(obj) => {
+          let mut map = HashMap::default();
+          let keys = Object::keys(&raw).into_diagnostic()?;
+          for key in keys {
+            let value = raw.get::<&str, String>(&key).into_diagnostic()?;
+            if let Some(value) = value {
+              map.insert(key, value);
+            }
+          }
+        },
         None => None,
     };
 
-        Self {
-            _ref: val.r#ref,
-            title_prop: val.title_prop,
-            desc_prop: val.desc_prop,
-            expand_props,
-            dimensions: val.dimensions,
-            icon,
-            native: val.native,
-            svg_props: val.svg_props,
-            typescript: val.typescript,
-            memo: val.memo,
-            replace_attr_values: val.replace_attr_values,
-            jsx_runtime: val.jsx_runtime,
-            jsx_runtime_import: val.jsx_runtime_import,
-            named_export: val.named_export,
-            export_type: val.export_type,
-        }
+    Self {
+      _ref: val.r#ref,
+      title_prop: val.title_prop,
+      desc_prop: val.desc_prop,
+      expand_props,
+      dimensions: val.dimensions,
+      icon,
+      native: val.native,
+      svg_props: val.svg_props,
+      typescript: val.typescript,
+      memo: val.memo,
+      replace_attr_values: val.replace_attr_values,
+      jsx_runtime: val.jsx_runtime,
+      jsx_runtime_import: val.jsx_runtime_import,
+      named_export: val.named_export,
+      export_type: val.export_type,
     }
+  }
 }
 
 #[napi(object, object_to_js = false)]
 pub struct JsJSXRuntimeImport {
-    pub source: String,
+  pub source: String,
   pub namespace: Option<String>,
   pub default_specifier: Option<String>,
   pub specifiers: Option<Vec<String>>,

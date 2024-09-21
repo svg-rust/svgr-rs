@@ -4,8 +4,8 @@
 #[macro_use]
 extern crate napi_derive;
 
-mod state;
 mod config;
+mod state;
 
 use state::JsState;
 use svgr_rs::{transform, Config};
