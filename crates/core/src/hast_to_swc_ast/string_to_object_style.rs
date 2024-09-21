@@ -1,16 +1,16 @@
+use std::borrow::Cow;
+
 use lazy_static::lazy_static;
 use regex::{Captures, Regex};
 use swc_core::{common::DUMMY_SP, ecma::ast::*};
 
 use super::util::*;
 
-pub fn hyphen_to_camel_case(s: &str) -> String {
+pub fn hyphen_to_camel_case(s: &str) -> Cow<str> {
   lazy_static! {
     static ref HYPHEN_REGEX: Regex = Regex::new(r#"-(.)"#).unwrap();
   }
-  HYPHEN_REGEX
-    .replace_all(s, |caps: &Captures| caps[1].to_uppercase())
-    .into()
+  HYPHEN_REGEX.replace_all(s, |caps: &Captures| caps[1].to_uppercase())
 }
 
 // Format style key into JSX style object key.

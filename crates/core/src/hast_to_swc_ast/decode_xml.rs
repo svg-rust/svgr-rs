@@ -1,7 +1,7 @@
 pub fn decode_xml(s: &str) -> String {
   let bytes = s.as_bytes();
 
-  let mut ret = String::new();
+  let mut ret = String::with_capacity(s.len());
   let mut cur_idx = 0;
   let mut last_idx = 0;
 
