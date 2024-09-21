@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
+use lazy_static::lazy_static;
+
 // From https://raw.githubusercontent.com/facebook/react/master/packages/react-dom/src/shared/possibleStandardNames.js
-pub fn create_attr_mappings() -> HashMap<&'static str, &'static str> {
+lazy_static! {
+  pub static ref ATTR_MAPPINGS: HashMap<&'static str, &'static str> =
   HashMap::from([
     // HTML
     ("accept", "accept"),
@@ -488,5 +491,5 @@ pub fn create_attr_mappings() -> HashMap<&'static str, &'static str> {
     ("ychannelselector", "yChannelSelector"),
     ("z", "z"),
     ("zoomandpan", "zoomAndPan"),
-  ])
+  ]);
 }

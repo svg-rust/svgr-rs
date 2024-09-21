@@ -15,7 +15,7 @@ mod string_to_object_style;
 mod util;
 
 use self::decode_xml::*;
-use self::mappings::*;
+use self::mappings::ATTR_MAPPINGS;
 use self::string_to_object_style::*;
 use self::util::*;
 
@@ -92,14 +92,14 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
 
 pub struct HastVisitor {
   jsx: Option<JSXElement>,
-  attr_mappings: HashMap<&'static str, &'static str>,
+  attr_mappings: &'static HashMap<&'static str, &'static str>,
 }
 
 impl HastVisitor {
   fn new() -> Self {
     Self {
       jsx: None,
-      attr_mappings: create_attr_mappings(),
+      attr_mappings: &ATTR_MAPPINGS,
     }
   }
 
@@ -139,7 +139,7 @@ impl HastVisitor {
 
     let opening = JSXOpeningElement {
       span: DUMMY_SP,
-      name: name,
+      name,
       attrs,
       self_closing: children.is_empty(),
       type_args: None,
@@ -283,7 +283,7 @@ mod tests {
       })))
       .unwrap();
 
-    String::from_utf8_lossy(&buf).to_string()
+    unsafe { String::from_utf8_unchecked(buf) }
   }
 
   fn document_test(input: PathBuf) {
