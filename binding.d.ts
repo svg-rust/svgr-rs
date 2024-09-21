@@ -25,6 +25,70 @@ export interface TransformOutput {
   map?: string
   output?: string
 }
+export interface JsJsxRuntimeImport {
+  source: string
+  namespace?: string
+  defaultSpecifier?: string
+  specifiers?: Array<string>
+}
+export interface JsConfig {
+  /** Setting this to `true` will forward ref to the root SVG tag. */
+  ref?: boolean
+  /**
+   * Add title tag via title property.
+   * If title_prop is set to true and no title is provided at render time, this will fallback to an existing title element in the svg if exists.
+   */
+  titleProp?: boolean
+  /**
+   * Add desc tag via desc property.
+   * If desc_prop is set to true and no description is provided at render time, this will fallback to an existing desc element in the svg if exists.
+   */
+  descProp?: boolean
+  /**
+   * All properties given to component will be forwarded on SVG tag.
+   * Possible values: "start", "end" or false.
+   */
+  expandProps?: boolean | string
+  /**
+   * Keep `width` and `height` attributes from the root SVG tag.
+   * Removal is guaranteed if `dimensions: false`, unlike the `remove_dimensions: true` SVGO plugin option which also generates a `viewBox` from the dimensions if no `viewBox` is present.
+   */
+  dimensions?: boolean
+  /**
+   * Replace SVG `width` and `height` by a custom value.
+   * If value is omitted, it uses `1em` in order to make SVG size inherits from text size.
+   */
+  icon?: boolean | string | number
+  /**
+   * Modify all SVG nodes with uppercase and use a specific template with `react-native-svg` imports.
+   * All unsupported nodes will be removed.
+   */
+  native?: boolean
+  /** Add props to the root SVG tag. */
+  svgProps?: { [key: string]: string }
+  /** Generates `.tsx` files with TypeScript typings. */
+  typescript?: boolean
+  /** Setting this to `true` will wrap the exported component in `React.memo`. */
+  memo?: boolean
+  /**
+   * Replace an attribute value by an other.
+   * The main usage of this option is to change an icon color to "currentColor" in order to inherit from text color.
+   */
+  replaceAttrValues?: { [key: string]: string }
+  /**
+   * Specify a JSX runtime to use.
+   * * "classic": adds `import * as React from 'react'` on the top of file
+   * * "automatic": do not add anything
+   * * "classic-preact": adds `import { h } from 'preact'` on the top of file
+   */
+  jsxRuntime?: string
+  /** Specify a custom JSX runtime source to use. Allows to customize the import added at the top of generated file. */
+  jsxRuntimeImport?: JsJsxRuntimeImport
+  /** The named export defaults to `ReactComponent`, can be customized with the `named_export` option. */
+  namedExport?: string
+  /** If you prefer named export in any case, you may set the `export_type` option to `named`. */
+  exportType?: 'named' | 'default'
+}
 export interface JsCaller {
   name?: string
   previousExport?: string
@@ -34,4 +98,4 @@ export interface JsState {
   componentName?: string
   caller?: JsCaller
 }
-export declare function transform(code: string, config: Buffer, jsState?: JsState | undefined | null): Promise<string>
+export declare function transform(code: string, config?: JsConfig | undefined | null, state?: JsState | undefined | null): Promise<unknown>

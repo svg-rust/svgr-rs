@@ -46,7 +46,7 @@ pub struct Options {
   pub title_prop: bool,
   pub desc_prop: bool,
   pub expand_props: Option<ExpandProps>,
-  pub _ref: bool,
+  pub r#ref: bool,
   // pub template: Option<Box<dyn Template>>,
   pub native: bool,
   pub memo: bool,
@@ -235,7 +235,7 @@ pub fn get_variables(
     }
   }
 
-  if opts._ref {
+  if opts.r#ref {
     if props.is_empty() {
       props.push(Pat::Ident(BindingIdent::from(Ident::new(
         "_".into(),

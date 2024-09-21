@@ -1,7 +1,64 @@
-use napi::{bindgen_prelude::{Either3, Object}, Either};
-use svgr_rs::{Config, ExpandProps, Icon, JSXRuntime, JSXRuntimeImport};
+use std::collections::HashMap;
+
+use napi::{
+  bindgen_prelude::{Either3, FromNapiValue, Object},
+  Either,
+};
+use svgr_rs::{Config, ExpandProps, ExportType, Icon, JSXRuntime, JSXRuntimeImport, SvgProp};
+
+#[derive(Clone)]
+pub struct JsSvgProps(Vec<SvgProp>);
+
+impl FromNapiValue for JsSvgProps {
+  unsafe fn from_napi_value(
+    env: napi::sys::napi_env,
+    napi_val: napi::sys::napi_value,
+  ) -> napi::Result<Self> {
+    let js_object: Object = FromNapiValue::from_napi_value(env, napi_val)?;
+    let keys = Object::keys(&js_object)?;
+    let mut svg_props = Vec::with_capacity(keys.len());
+    for key in keys {
+      let value = js_object.get::<&str, String>(&key)?;
+      if let Some(value) = value {
+        svg_props.push(SvgProp { key, value });
+      }
+    }
+    Ok(JsSvgProps(svg_props))
+  }
+}
+
+#[derive(Clone)]
+pub struct JsReplaceAttrValues(HashMap<String, String>);
+
+impl FromNapiValue for JsReplaceAttrValues {
+  unsafe fn from_napi_value(
+    env: napi::sys::napi_env,
+    napi_val: napi::sys::napi_value,
+  ) -> napi::Result<Self> {
+    let js_object: Object = FromNapiValue::from_napi_value(env, napi_val)?;
+    let keys = Object::keys(&js_object)?;
+    let mut replace_attr_values = HashMap::new();
+    for key in keys {
+      let value = js_object.get::<&str, String>(&key)?;
+      if let Some(value) = value {
+        replace_attr_values.insert(key, value);
+      }
+    }
+    Ok(JsReplaceAttrValues(replace_attr_values))
+  }
+}
 
 #[napi(object, object_to_js = false)]
+#[derive(Clone)]
+pub struct JsJSXRuntimeImport {
+  pub source: String,
+  pub namespace: Option<String>,
+  pub default_specifier: Option<String>,
+  pub specifiers: Option<Vec<String>>,
+}
+
+#[napi(object, object_to_js = false)]
+#[derive(Clone)]
 pub struct JsConfig {
   /// Setting this to `true` will forward ref to the root SVG tag.
   pub r#ref: Option<bool>,
@@ -31,7 +88,8 @@ pub struct JsConfig {
   pub native: Option<bool>,
 
   /// Add props to the root SVG tag.
-  pub svg_props: Option<Object>,
+  #[napi(ts_type = "{ [key: string]: string }")]
+  pub svg_props: Option<JsSvgProps>,
 
   /// Generates `.tsx` files with TypeScript typings.
   pub typescript: Option<bool>,
@@ -41,7 +99,8 @@ pub struct JsConfig {
 
   /// Replace an attribute value by an other.
   /// The main usage of this option is to change an icon color to "currentColor" in order to inherit from text color.
-  pub replace_attr_values: Option<Object>,
+  #[napi(ts_type = "{ [key: string]: string }")]
+  pub replace_attr_values: Option<JsReplaceAttrValues>,
 
   /// Specify a JSX runtime to use.
   /// * "classic": adds `import * as React from 'react'` on the top of file
@@ -60,10 +119,12 @@ pub struct JsConfig {
   pub export_type: Option<String>,
 }
 
-impl From<JsConfig> for Config {
-  fn from(val: JsConfig) -> Self {
+impl TryFrom<JsConfig> for Config {
+  type Error = napi::Error;
+
+  fn try_from(val: JsConfig) -> Result<Self, Self::Error> {
     let expand_props = match val.expand_props {
-      Some(e) => match e {
+      Some(raw) => match raw {
         Either::A(b) => ExpandProps::Bool(b),
         Either::B(s) => match s.as_str() {
           "start" => ExpandProps::Start,
@@ -74,53 +135,70 @@ impl From<JsConfig> for Config {
       None => ExpandProps::End,
     };
 
-    let icon = match val.icon {
-      Some(i) => Some(match i {
-        Either3::A(b) => Icon::Bool(b),
-        Either3::B(s) => Icon::Str(s),
-        Either3::C(f) => Icon::Num(f),
+    let icon = val.icon.map(|raw| match raw {
+      Either3::A(b) => Icon::Bool(b),
+      Either3::B(s) => Icon::Str(s),
+      Either3::C(f) => Icon::Num(f),
+    });
+
+    let svg_props = match val.svg_props {
+      Some(raw) => Some(raw.0),
+      None => None,
+    };
+
+    let jsx_runtime = match val.jsx_runtime {
+      Some(raw) => match raw.as_str() {
+        "automatic" => JSXRuntime::Automatic,
+        "classic-preact" => JSXRuntime::ClassicPreact,
+        _ => JSXRuntime::Classic,
+      },
+      None => JSXRuntime::Classic,
+    };
+
+    let replace_attr_values = match val.replace_attr_values {
+      Some(raw) => Some(raw.0),
+      None => None,
+    };
+
+    let jsx_runtime_import = match val.jsx_runtime_import {
+      Some(raw) => Some(JSXRuntimeImport {
+        source: raw.source,
+        namespace: raw.namespace,
+        default_specifier: raw.default_specifier,
+        specifiers: raw.specifiers,
       }),
       None => None,
     };
 
-    let svg_props = match val.svg_props {
-        Some(obj) => {
-          let mut map = HashMap::default();
-          let keys = Object::keys(&raw).into_diagnostic()?;
-          for key in keys {
-            let value = raw.get::<&str, String>(&key).into_diagnostic()?;
-            if let Some(value) = value {
-              map.insert(key, value);
-            }
-          }
-        },
-        None => None,
+    let named_export = match val.named_export {
+      Some(s) => s,
+      None => "ReactComponent".to_string(),
     };
 
-    Self {
-      _ref: val.r#ref,
+    let export_type = match val.export_type {
+      Some(s) => match s.as_str() {
+        "named" => ExportType::Named,
+        _ => ExportType::Default,
+      },
+      None => ExportType::Default,
+    };
+
+    Ok(Self {
+      r#ref: val.r#ref,
       title_prop: val.title_prop,
       desc_prop: val.desc_prop,
       expand_props,
       dimensions: val.dimensions,
       icon,
       native: val.native,
-      svg_props: val.svg_props,
+      svg_props,
       typescript: val.typescript,
       memo: val.memo,
-      replace_attr_values: val.replace_attr_values,
-      jsx_runtime: val.jsx_runtime,
-      jsx_runtime_import: val.jsx_runtime_import,
-      named_export: val.named_export,
-      export_type: val.export_type,
-    }
+      replace_attr_values,
+      jsx_runtime: Some(jsx_runtime),
+      jsx_runtime_import,
+      named_export,
+      export_type: Some(export_type),
+    })
   }
-}
-
-#[napi(object, object_to_js = false)]
-pub struct JsJSXRuntimeImport {
-  pub source: String,
-  pub namespace: Option<String>,
-  pub default_specifier: Option<String>,
-  pub specifiers: Option<Vec<String>>,
 }

@@ -9,6 +9,7 @@ pub struct Caller {
   pub previous_export: Option<String>,
 }
 
+#[derive(Debug, Clone)]
 /// The state linked to the transformation.
 pub struct Config {
   /// The name of the file that is generated, mainly used to find runtime config file to apply.

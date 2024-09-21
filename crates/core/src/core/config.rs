@@ -1,7 +1,5 @@
 use std::collections::HashMap;
 
-use linked_hash_map::LinkedHashMap;
-
 #[derive(Debug, Clone)]
 pub enum Icon {
   Bool(bool),
@@ -44,11 +42,17 @@ pub enum ExportType {
   Default,
 }
 
+#[derive(Debug, Clone)]
+pub struct SvgProp {
+  pub key: String,
+  pub value: String,
+}
+
 /// The options used to transform the SVG.
 #[derive(Debug, Clone)]
 pub struct Config {
   /// Setting this to `true` will forward ref to the root SVG tag.
-  pub _ref: Option<bool>,
+  pub r#ref: Option<bool>,
 
   /// Add title tag via title property.
   /// If title_prop is set to true and no title is provided at render time, this will fallback to an existing title element in the svg if exists.
@@ -75,7 +79,7 @@ pub struct Config {
   pub native: Option<bool>,
 
   /// Add props to the root SVG tag.
-  pub svg_props: Option<LinkedHashMap<String, String>>,
+  pub svg_props: Option<Vec<SvgProp>>,
 
   /// Generates `.tsx` files with TypeScript typings.
   pub typescript: Option<bool>,
@@ -106,7 +110,7 @@ pub struct Config {
 impl Default for Config {
   fn default() -> Self {
     Self {
-      _ref: Default::default(),
+      r#ref: Default::default(),
       title_prop: Default::default(),
       desc_prop: Default::default(),
       expand_props: Default::default(),

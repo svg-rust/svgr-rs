@@ -7,21 +7,47 @@ extern crate napi_derive;
 mod config;
 mod state;
 
+use config::JsConfig;
+use napi::{bindgen_prelude::AsyncTask, Env, JsString, Result, Task};
 use state::JsState;
 use svgr_rs::{transform, Config};
 
-#[napi(js_name = "transform")]
-pub async fn transform_node(
+pub struct TransformTask {
   code: String,
-  config: napi::bindgen_prelude::Buffer,
-  js_state: Option<JsState>,
-) -> napi::bindgen_prelude::Result<String> {
-  let config: Config = get_deserialized(&config)?;
-  let state = js_state.map(|s| s.into()).unwrap_or_default();
-  match transform(code, config, state) {
-    Ok(result) => napi::bindgen_prelude::Result::Ok(result),
-    Err(reason) => napi::bindgen_prelude::Result::Err(napi::bindgen_prelude::Error::from_reason(
-      reason.to_string(),
-    )),
+  config: Option<JsConfig>,
+  state: Option<JsState>,
+}
+
+impl Task for TransformTask {
+  type Output = String;
+  type JsValue = JsString;
+
+  fn compute(&mut self) -> Result<Self::Output> {
+    let config: Config = match self.config.clone() {
+      Some(val) => val.try_into()?,
+      None => Config::default(),
+    };
+    let state = self.state.clone().map(|s| s.into()).unwrap_or_default();
+    match transform(self.code.clone(), config, state) {
+      Ok(result) => napi::Result::Ok(result),
+      Err(reason) => napi::Result::Err(napi::Error::from_reason(reason.to_string())),
+    }
   }
+
+  fn resolve(&mut self, env: Env, output: Self::Output) -> Result<Self::JsValue> {
+    env.create_string(&output)
+  }
+}
+
+#[napi(js_name = "transform")]
+pub fn transform_node(
+  code: String,
+  config: Option<JsConfig>,
+  state: Option<JsState>,
+) -> AsyncTask<TransformTask> {
+  AsyncTask::new(TransformTask {
+    code,
+    config,
+    state,
+  })
 }

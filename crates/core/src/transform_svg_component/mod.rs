@@ -22,7 +22,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
     title_prop: config.title_prop.unwrap_or(false),
     desc_prop: config.desc_prop.unwrap_or(false),
     expand_props,
-    _ref: config._ref.unwrap_or(false),
+    r#ref: config.r#ref.unwrap_or(false),
     native: config.native.unwrap_or(false),
     memo: config.memo.unwrap_or(false),
     named_export: Some(config.named_export.clone()),
@@ -246,7 +246,7 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        _ref: Some(true),
+        r#ref: Some(true),
         expand_props: core::config::ExpandProps::Bool(false),
         ..Default::default()
       },
@@ -471,7 +471,7 @@ export default SvgComponent;
       r#"<svg><g/></svg>"#,
       &core::config::Config {
         expand_props: core::config::ExpandProps::Bool(true),
-        _ref: Some(true),
+        r#ref: Some(true),
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -499,7 +499,7 @@ export default ForwardRef;
       r#"<Svg><g/></Svg>"#,
       &core::config::Config {
         native: Some(true),
-        _ref: Some(true),
+        r#ref: Some(true),
         expand_props: core::config::ExpandProps::Bool(false),
         ..Default::default()
       },
@@ -558,7 +558,7 @@ export default SvgComponent;
       &core::config::Config {
         native: Some(true),
         expand_props: core::config::ExpandProps::Bool(true),
-        _ref: Some(true),
+        r#ref: Some(true),
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -616,7 +616,7 @@ export default Memo;
       r#"<svg><g/></svg>"#,
       &core::config::Config {
         memo: Some(true),
-        _ref: Some(true),
+        r#ref: Some(true),
         expand_props: core::config::ExpandProps::Bool(false),
         ..Default::default()
       },
