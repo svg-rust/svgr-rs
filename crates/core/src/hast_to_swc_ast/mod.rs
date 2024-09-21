@@ -75,8 +75,8 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     static ref SPACE_REGEX: Regex = Regex::new(r"^\s+$").unwrap();
   }
 
-  let value = n.data.to_string();
-  if SPACE_REGEX.is_match(&value) {
+  let value = n.data.as_str();
+  if SPACE_REGEX.is_match(value) {
     return None;
   }
 
@@ -84,7 +84,7 @@ fn text(n: &swc_xml::ast::Text) -> Option<JSXElementChild> {
     span: DUMMY_SP,
     expr: JSXExpr::Expr(Box::new(Expr::Lit(Lit::Str(Str {
       span: DUMMY_SP,
-      value: decode_xml(&value).into(),
+      value: decode_xml(value).into(),
       raw: None,
     })))),
   }))
@@ -112,7 +112,7 @@ impl HastVisitor {
       .attributes
       .iter()
       .map(|attr| {
-        let value = attr.value.clone().map(|v| get_value(&attr.name, &v));
+        let value = attr.value.as_ref().map(|v| get_value(&attr.name, v));
         JSXAttrOrSpread::JSXAttr(JSXAttr {
           span: DUMMY_SP,
           name: JSXAttrName::Ident(self.get_key(&attr.name, &n.tag_name).into()),
@@ -128,21 +128,21 @@ impl HastVisitor {
     ));
     let children = self.all(&n.children);
 
-    let opening = JSXOpeningElement {
-      span: DUMMY_SP,
-      name: name.clone(),
-      attrs,
-      self_closing: children.is_empty(),
-      type_args: None,
-    };
-
     let closing = if !children.is_empty() {
       Some(JSXClosingElement {
         span: DUMMY_SP,
-        name,
+        name: name.clone(),
       })
     } else {
       None
+    };
+
+    let opening = JSXOpeningElement {
+      span: DUMMY_SP,
+      name: name,
+      attrs,
+      self_closing: children.is_empty(),
+      type_args: None,
     };
 
     JSXElement {
