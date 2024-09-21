@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, sync::Arc};
+use std::rc::Rc;
 
 use swc_core::common::SyntaxContext;
 use swc_core::{
@@ -323,12 +323,12 @@ pub fn get_variables(
 
       if let Some(caller) = &state.caller {
         if let Some(previous_export) = caller.previous_export.clone() {
-          let cm = Arc::<SourceMap>::default();
+          let cm = Rc::<SourceMap>::default();
           let fm = cm.new_source_file(FileName::Anon.into(), previous_export);
 
           let mut recovered_errors = vec![];
           let module = parser::parse_file_as_module(
-            fm.borrow(),
+            fm.as_ref(),
             parser::Syntax::Es(parser::EsSyntax {
               jsx: true,
               ..Default::default()

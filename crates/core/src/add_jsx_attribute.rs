@@ -223,7 +223,7 @@ fn svg_prop_to_attr(key: &str, value: &str) -> Attribute {
 
 #[cfg(test)]
 mod tests {
-  use std::sync::Arc;
+  use std::rc::Rc;
 
   use swc_core::{
     common::{FileName, SourceMap},
@@ -243,7 +243,7 @@ mod tests {
   }
 
   fn code_test(input: &str, opts: Options, expected: &str) {
-    let cm = Arc::<SourceMap>::default();
+    let cm = Rc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
     let lexer = Lexer::new(
