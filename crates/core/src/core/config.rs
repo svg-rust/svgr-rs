@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use linked_hash_map::LinkedHashMap;
 use serde::{Deserialize, Serialize};
 
@@ -159,7 +161,7 @@ pub struct Config {
   /// Replace an attribute value by an other.
   /// The main usage of this option is to change an icon color to "currentColor" in order to inherit from text color.
   #[serde(default)]
-  pub replace_attr_values: Option<LinkedHashMap<String, String>>,
+  pub replace_attr_values: Option<HashMap<String, String>>,
 
   /// Specify a JSX runtime to use.
   /// * "classic": adds `import * as React from 'react'` on the top of file
