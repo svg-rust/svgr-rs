@@ -5,6 +5,7 @@ use swc_core::{
 };
 
 use super::core;
+use crate::core::config::SvgProp;
 
 pub enum AttributePosition {
   Start,
@@ -30,14 +31,14 @@ impl Visitor {
     let mut attributes = Vec::new();
 
     if let Some(svg_props) = &config.svg_props {
-      for (k, v) in svg_props {
-        let attr = svg_prop_to_attr(k, v);
+      for SvgProp { key, value } in svg_props {
+        let attr = svg_prop_to_attr(key, value);
         attributes.push(attr);
       }
     }
 
-    let _ref = config._ref.unwrap_or(false);
-    if _ref {
+    let r#ref = config.r#ref.unwrap_or(false);
+    if r#ref {
       attributes.push(Attribute {
         name: "ref".to_string(),
         value: Some("ref".to_string()),

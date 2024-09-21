@@ -1,4 +1,5 @@
-use linked_hash_map::LinkedHashMap;
+use std::collections::HashMap;
+
 use swc_core::common::SyntaxContext;
 use swc_core::{
   common::DUMMY_SP,
@@ -8,7 +9,7 @@ use swc_core::{
 use super::core;
 
 pub struct Visitor {
-  values: LinkedHashMap<String, String>,
+  values: HashMap<String, String>,
 }
 
 impl Visitor {
@@ -77,7 +78,7 @@ mod tests {
 
   use super::*;
 
-  fn code_test(input: &str, replace_attr_values: LinkedHashMap<String, String>, expected: &str) {
+  fn code_test(input: &str, replace_attr_values: HashMap<String, String>, expected: &str) {
     let cm = Arc::<SourceMap>::default();
     let fm = cm.new_source_file(FileName::Anon.into(), input.to_string());
 
@@ -115,7 +116,7 @@ mod tests {
 
   #[test]
   fn should_replace_attribute_values_1() {
-    let mut replace_attr_values = LinkedHashMap::new();
+    let mut replace_attr_values = HashMap::new();
     replace_attr_values.insert("cool".to_string(), "not cool".to_string());
     code_test(
       r#"<div something="cool"/>;"#,
@@ -126,7 +127,7 @@ mod tests {
 
   #[test]
   fn should_replace_attribute_values_2() {
-    let mut replace_attr_values = LinkedHashMap::new();
+    let mut replace_attr_values = HashMap::new();
     replace_attr_values.insert("cool".to_string(), "{props.color}".to_string());
     code_test(
       r#"<div something="cool"/>;"#,

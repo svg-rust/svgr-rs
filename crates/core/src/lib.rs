@@ -25,7 +25,9 @@ mod transform_svg_component;
 
 pub use error::SvgrError;
 
-pub use self::core::config::{Config, ExpandProps, ExportType, Icon, JSXRuntime, JSXRuntimeImport};
+pub use self::core::config::{
+  Config, ExpandProps, ExportType, Icon, JSXRuntime, JSXRuntimeImport, SvgProp,
+};
 pub use self::core::state::{Caller, Config as State};
 
 /// Transform SVG into React components.
