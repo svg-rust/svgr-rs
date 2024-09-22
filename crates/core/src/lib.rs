@@ -77,8 +77,7 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
     None => false,
     _ => true,
   };
-  let dimensions = config.dimensions.unwrap_or(true);
-  let m = if icon && dimensions {
+  let m = if icon && config.dimensions {
     m.fold_with(&mut as_folder(svg_em_dimensions::Visitor::new(&config)))
   } else {
     m
@@ -91,8 +90,7 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
     m
   };
 
-  let title_prop = config.title_prop.unwrap_or(false);
-  let m = if title_prop {
+  let m = if config.title_prop {
     m.fold_with(&mut as_folder(svg_dynamic_title::Visitor::new(
       "title".to_string(),
     )))
@@ -100,8 +98,7 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
     m
   };
 
-  let desc_prop = config.desc_prop.unwrap_or(false);
-  let m = if desc_prop {
+  let m = if config.desc_prop {
     m.fold_with(&mut as_folder(svg_dynamic_title::Visitor::new(
       "desc".to_string(),
     )))
@@ -109,8 +106,7 @@ pub fn transform(code: String, config: Config, state: State) -> Result<String, S
     m
   };
 
-  let native = config.native.unwrap_or(false);
-  let m = if native {
+  let m = if config.native {
     let comments = SingleThreadedComments::default();
     m.fold_with(&mut as_folder(transform_react_native_svg::Visitor::new(
       &comments,

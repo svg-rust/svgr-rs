@@ -30,15 +30,12 @@ impl Visitor {
   pub fn new(config: &core::config::Config) -> Self {
     let mut attributes = Vec::new();
 
-    if let Some(svg_props) = &config.svg_props {
-      for SvgProp { key, value } in svg_props {
-        let attr = svg_prop_to_attr(key, value);
-        attributes.push(attr);
-      }
+    for SvgProp { key, value } in &config.svg_props {
+      let attr = svg_prop_to_attr(key, value);
+      attributes.push(attr);
     }
 
-    let r#ref = config.r#ref.unwrap_or(false);
-    if r#ref {
+    if config.r#ref {
       attributes.push(Attribute {
         name: "ref".to_string(),
         value: Some("ref".to_string()),
@@ -47,8 +44,7 @@ impl Visitor {
       });
     }
 
-    let title_prop = config.title_prop.unwrap_or(false);
-    if title_prop {
+    if config.title_prop {
       attributes.push(Attribute {
         name: "aria-labelledby".to_string(),
         value: Some("titleId".to_string()),
@@ -57,8 +53,7 @@ impl Visitor {
       });
     }
 
-    let desc_prop = config.desc_prop.unwrap_or(false);
-    if desc_prop {
+    if config.desc_prop {
       attributes.push(Attribute {
         name: "aria-describedby".to_string(),
         value: Some("descId".to_string()),
@@ -67,16 +62,13 @@ impl Visitor {
       });
     }
 
-    let expand_props = match config.expand_props {
-      core::config::ExpandProps::Bool(b) => b,
-      _ => true,
-    };
-    let position = match config.expand_props {
-      core::config::ExpandProps::Start => Some(AttributePosition::Start),
-      core::config::ExpandProps::End => Some(AttributePosition::End),
-      _ => None,
-    };
+    let expand_props = !matches!(config.expand_props, core::config::ExpandProps::None);
     if expand_props {
+      let position = match config.expand_props {
+        core::config::ExpandProps::Start => Some(AttributePosition::Start),
+        core::config::ExpandProps::End => Some(AttributePosition::End),
+        core::config::ExpandProps::None => None,
+      };
       attributes.push(Attribute {
         name: "props".to_string(),
         spread: true,

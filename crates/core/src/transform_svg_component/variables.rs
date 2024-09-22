@@ -8,7 +8,7 @@ use swc_core::{
 };
 
 use super::core;
-use crate::SvgrError;
+use crate::{ExpandProps, ExportType, SvgrError};
 
 pub struct TemplateVariables {
   #[allow(dead_code)]
@@ -27,25 +27,12 @@ pub enum JSXRuntime {
   Classic,
 }
 
-pub enum ExpandProps {
-  Bool(bool),
-  Start,
-  End,
-}
-
-#[derive(Default)]
-pub enum ExportType {
-  #[default]
-  Default,
-  Named,
-}
-
 #[derive(Default)]
 pub struct Options {
   pub typescript: bool,
   pub title_prop: bool,
   pub desc_prop: bool,
-  pub expand_props: Option<ExpandProps>,
+  pub expand_props: ExpandProps,
   pub r#ref: bool,
   // pub template: Option<Box<dyn Template>>,
   pub native: bool,
@@ -165,11 +152,7 @@ pub fn get_variables(
     props.push(Pat::Object(prop));
   }
 
-  let need_expand_props = match opts.expand_props {
-    None => false,
-    Some(ExpandProps::Bool(expand_props)) => expand_props,
-    _ => true,
-  };
+  let need_expand_props = !matches!(opts.expand_props, ExpandProps::None);
   if need_expand_props {
     let existing = if !props.is_empty() {
       if let Pat::Object(ref mut object_pat) = props[0] {
