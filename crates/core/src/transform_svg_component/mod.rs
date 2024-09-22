@@ -6,27 +6,16 @@ use crate::{core, SvgrError};
 mod variables;
 
 fn get_variables_options(config: &core::config::Config) -> variables::Options {
-  let expand_props = match config.expand_props {
-    core::config::ExpandProps::Bool(b) => Some(variables::ExpandProps::Bool(b)),
-    core::config::ExpandProps::Start => Some(variables::ExpandProps::Start),
-    core::config::ExpandProps::End => Some(variables::ExpandProps::End),
-  };
-
-  let export_type = match config.export_type {
-    Some(core::config::ExportType::Named) => variables::ExportType::Named,
-    _ => variables::ExportType::Default,
-  };
-
   let mut opts = variables::Options {
-    typescript: config.typescript.unwrap_or(false),
-    title_prop: config.title_prop.unwrap_or(false),
-    desc_prop: config.desc_prop.unwrap_or(false),
-    expand_props,
-    r#ref: config.r#ref.unwrap_or(false),
-    native: config.native.unwrap_or(false),
-    memo: config.memo.unwrap_or(false),
+    typescript: config.typescript,
+    title_prop: config.title_prop,
+    desc_prop: config.desc_prop,
+    expand_props: config.expand_props.clone(),
+    r#ref: config.r#ref,
+    native: config.native,
+    memo: config.memo,
     named_export: Some(config.named_export.clone()),
-    export_type,
+    export_type: config.export_type.clone(),
     ..Default::default()
   };
 
@@ -36,12 +25,7 @@ fn get_variables_options(config: &core::config::Config) -> variables::Options {
     return opts;
   }
 
-  let jsx_runtime = config
-    .jsx_runtime
-    .clone()
-    .unwrap_or(core::config::JSXRuntime::Classic);
-
-  match jsx_runtime {
+  match &config.jsx_runtime {
     core::config::JSXRuntime::Classic => {
       opts.jsx_runtime = variables::JSXRuntime::Classic;
       opts.import_source = Some("react".to_string());
@@ -190,7 +174,7 @@ mod tests {
     test_code(input, config, state, js);
 
     let mut config = config.clone();
-    config.typescript = Some(true);
+    config.typescript = true;
     test_code(input, &config, state, ts);
   }
 
@@ -199,7 +183,7 @@ mod tests {
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        expand_props: core::config::ExpandProps::Bool(false),
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -221,8 +205,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<Svg><g/></Svg>"#,
       &core::config::Config {
-        native: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        native: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -246,8 +230,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        r#ref: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        r#ref: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -274,8 +258,8 @@ export default ForwardRef;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        title_prop: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        title_prop: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -301,8 +285,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        title_prop: Some(true),
-        expand_props: core::config::ExpandProps::Bool(true),
+        title_prop: true,
+        expand_props: core::config::ExpandProps::End,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -329,8 +313,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        desc_prop: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        desc_prop: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -356,8 +340,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        expand_props: core::config::ExpandProps::Bool(true),
-        desc_prop: Some(true),
+        expand_props: core::config::ExpandProps::End,
+        desc_prop: true,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -384,9 +368,9 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        title_prop: Some(true),
-        desc_prop: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        title_prop: true,
+        desc_prop: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -415,9 +399,9 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        expand_props: core::config::ExpandProps::Bool(true),
-        title_prop: Some(true),
-        desc_prop: Some(true),
+        expand_props: core::config::ExpandProps::End,
+        title_prop: true,
+        desc_prop: true,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -446,7 +430,7 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        expand_props: core::config::ExpandProps::Bool(true),
+        expand_props: core::config::ExpandProps::End,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -470,8 +454,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        expand_props: core::config::ExpandProps::Bool(true),
-        r#ref: Some(true),
+        expand_props: core::config::ExpandProps::End,
+        r#ref: true,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -498,9 +482,9 @@ export default ForwardRef;
     test_js_n_ts(
       r#"<Svg><g/></Svg>"#,
       &core::config::Config {
-        native: Some(true),
-        r#ref: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        native: true,
+        r#ref: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -529,8 +513,8 @@ export default ForwardRef;
     test_js_n_ts(
       r#"<Svg><g/></Svg>"#,
       &core::config::Config {
-        native: Some(true),
-        expand_props: core::config::ExpandProps::Bool(true),
+        native: true,
+        expand_props: core::config::ExpandProps::End,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -556,9 +540,9 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<Svg><g/></Svg>"#,
       &core::config::Config {
-        native: Some(true),
-        expand_props: core::config::ExpandProps::Bool(true),
-        r#ref: Some(true),
+        native: true,
+        expand_props: core::config::ExpandProps::End,
+        r#ref: true,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -587,8 +571,8 @@ export default ForwardRef;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        memo: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        memo: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -615,9 +599,9 @@ export default Memo;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        memo: Some(true),
-        r#ref: Some(true),
-        expand_props: core::config::ExpandProps::Bool(false),
+        memo: true,
+        r#ref: true,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -647,7 +631,7 @@ export default Memo;
       r#"<svg><g/></svg>"#,
       &core::config::Config {
         named_export: "Component".to_string(),
-        expand_props: core::config::ExpandProps::Bool(false),
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -684,8 +668,8 @@ export default img;
       r#"<svg><g/></svg>"#,
       &core::config::Config {
         named_export: "ReactComponent".to_string(),
-        export_type: Some(core::config::ExportType::Named),
-        expand_props: core::config::ExpandProps::Bool(false),
+        export_type: core::config::ExportType::Named,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -710,8 +694,8 @@ export { SvgComponent as ReactComponent };
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        jsx_runtime: Some(core::config::JSXRuntime::Automatic),
-        expand_props: core::config::ExpandProps::Bool(false),
+        jsx_runtime: core::config::JSXRuntime::Automatic,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -731,8 +715,8 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        jsx_runtime: Some(core::config::JSXRuntime::Classic),
-        expand_props: core::config::ExpandProps::Bool(false),
+        jsx_runtime: core::config::JSXRuntime::Classic,
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -754,13 +738,13 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        jsx_runtime: Some(core::config::JSXRuntime::Classic),
+        jsx_runtime: core::config::JSXRuntime::Classic,
         jsx_runtime_import: Some(core::config::JSXRuntimeImport {
           specifiers: Some(vec!["h".to_string()]),
           source: "preact".to_string(),
           ..Default::default()
         }),
-        expand_props: core::config::ExpandProps::Bool(false),
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -782,13 +766,13 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        jsx_runtime: Some(core::config::JSXRuntime::Classic),
+        jsx_runtime: core::config::JSXRuntime::Classic,
         jsx_runtime_import: Some(core::config::JSXRuntimeImport {
           namespace: Some("Preact".to_string()),
           source: "preact".to_string(),
           ..Default::default()
         }),
-        expand_props: core::config::ExpandProps::Bool(false),
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -810,13 +794,13 @@ export default SvgComponent;
     test_js_n_ts(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        jsx_runtime: Some(core::config::JSXRuntime::Classic),
+        jsx_runtime: core::config::JSXRuntime::Classic,
         jsx_runtime_import: Some(core::config::JSXRuntimeImport {
           default_specifier: Some("h".to_string()),
           source: "hyperapp-jsx-pragma".to_string(),
           ..Default::default()
         }),
-        expand_props: core::config::ExpandProps::Bool(false),
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {
@@ -841,12 +825,12 @@ export default SvgComponent;
     test_code(
       r#"<svg><g/></svg>"#,
       &core::config::Config {
-        jsx_runtime: Some(core::config::JSXRuntime::Classic),
+        jsx_runtime: core::config::JSXRuntime::Classic,
         jsx_runtime_import: Some(core::config::JSXRuntimeImport {
           source: "preact".to_string(),
           ..Default::default()
         }),
-        expand_props: core::config::ExpandProps::Bool(false),
+        expand_props: core::config::ExpandProps::None,
         ..Default::default()
       },
       &core::state::InternalConfig {

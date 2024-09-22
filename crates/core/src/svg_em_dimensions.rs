@@ -36,8 +36,7 @@ impl Visitor {
         width = Some(Size::Num(n));
       }
       core::config::Icon::Bool(_) => {
-        let native = config.native.unwrap_or(false);
-        if native {
+        if config.native {
           height = Some(Size::Num(24.0));
           width = Some(Size::Num(24.0));
         } else {

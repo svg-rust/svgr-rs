@@ -11,8 +11,7 @@ impl Visitor {
   pub fn new(config: &core::config::Config) -> Self {
     let mut attributes = vec!["version".to_string()];
 
-    let dimensions = config.dimensions.unwrap_or(true);
-    if !dimensions {
+    if !config.dimensions {
       attributes.push("width".to_string());
       attributes.push("height".to_string());
     }

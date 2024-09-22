@@ -13,7 +13,7 @@ use state::JsState;
 use svgr_rs::{transform, Config};
 
 pub struct TransformTask {
-  code: String,
+  code: Option<String>,
   config: Option<JsConfig>,
   state: Option<JsState>,
 }
@@ -23,12 +23,13 @@ impl Task for TransformTask {
   type JsValue = JsString;
 
   fn compute(&mut self) -> Result<Self::Output> {
-    let config: Config = match self.config.clone() {
+    let config: Config = match self.config.take() {
       Some(val) => val.try_into()?,
       None => Config::default(),
     };
-    let state = self.state.clone().map(|s| s.into()).unwrap_or_default();
-    match transform(self.code.clone(), config, state) {
+    let state = self.state.take().map(|s| s.into()).unwrap_or_default();
+    let code = self.code.take().unwrap();
+    match transform(code, config, state) {
       Ok(result) => napi::Result::Ok(result),
       Err(reason) => napi::Result::Err(napi::Error::from_reason(reason.to_string())),
     }
@@ -46,7 +47,7 @@ pub fn transform_node(
   state: Option<JsState>,
 ) -> AsyncTask<TransformTask> {
   AsyncTask::new(TransformTask {
-    code,
+    code: Some(code),
     config,
     state,
   })

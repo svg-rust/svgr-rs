@@ -125,7 +125,13 @@ impl TryFrom<JsConfig> for Config {
   fn try_from(val: JsConfig) -> Result<Self, Self::Error> {
     let expand_props = match val.expand_props {
       Some(raw) => match raw {
-        Either::A(b) => ExpandProps::Bool(b),
+        Either::A(b) => {
+          if b {
+            ExpandProps::End
+          } else {
+            ExpandProps::None
+          }
+        }
         Either::B(s) => match s.as_str() {
           "start" => ExpandProps::Start,
           "end" => ExpandProps::End,
@@ -142,8 +148,8 @@ impl TryFrom<JsConfig> for Config {
     });
 
     let svg_props = match val.svg_props {
-      Some(raw) => Some(raw.0),
-      None => None,
+      Some(raw) => raw.0,
+      None => vec![],
     };
 
     let jsx_runtime = match val.jsx_runtime {
@@ -184,21 +190,21 @@ impl TryFrom<JsConfig> for Config {
     };
 
     Ok(Self {
-      r#ref: val.r#ref,
-      title_prop: val.title_prop,
-      desc_prop: val.desc_prop,
+      r#ref: val.r#ref.unwrap_or(false),
+      title_prop: val.title_prop.unwrap_or(false),
+      desc_prop: val.desc_prop.unwrap_or(false),
       expand_props,
-      dimensions: val.dimensions,
+      dimensions: val.dimensions.unwrap_or(true),
       icon,
-      native: val.native,
+      native: val.native.unwrap_or(false),
       svg_props,
-      typescript: val.typescript,
-      memo: val.memo,
+      typescript: val.typescript.unwrap_or(false),
+      memo: val.memo.unwrap_or(false),
       replace_attr_values,
-      jsx_runtime: Some(jsx_runtime),
+      jsx_runtime,
       jsx_runtime_import,
       named_export,
-      export_type: Some(export_type),
+      export_type,
     })
   }
 }
